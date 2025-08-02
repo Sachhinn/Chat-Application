@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App: Authentication</title>
+    <style>
+        body {
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            padding: 1em
+        }
+
+        .main {
+            height: 100%;
+            background-color: #000900;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            box-sizing: border-box;
+            padding: 1em;
+            width: 25vw;
+            background-color: #fff;
+            border-radius: 5px;
+            overflow: hidden;
+            & h2 {
+                text-align: center;
+                text-decoration: underline;
+            }
+        }
+        .container label{
+            font-size:1em;
+            text-transform: uppercase;
+            font-family: sans-serif;
+        }
+        .container input {
+            box-sizing: border-box;
+            width: 100%;
+            margin-bottom: 1em;
+            color: #000900;
+            border: 1px solid #c1c1c1;
+            border-radius: 5px;
+            font-size: 1.2em;
+            padding:5px;
+        }
+        .container input:focus{
+            transition: transform 0.3s ease-in-out;
+           transform: scale(1.02);
+        }
+        .container button {
+            display: block;
+            text-align: center;
+            margin: auto;
+            font-size: 1.5em;
+            background: #000900;
+            color: white;
+            border-radius: 2em;
+            padding: 2px 15px;
+            width: 50%;
+            cursor: pointer;
+        }
+
+        .container button:active{
+            transition:transfrom ease-in-out;
+            transform: scale(.9,.9);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main">
+        <div class="container">
+            <h2>Login:</h2>
+            <form action="/login" method="post">
+                <label for="username"> <strong> Username:</strong></label>
+                <input type="text" id="username" name="username" placeholder="Username">
+                <label for="password"><strong>Password:</strong></label>
+                <input type="password" id="password" name="password" placeholder="Password">
+                <button type="submit">Login</button>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>

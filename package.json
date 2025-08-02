@@ -1,0 +1,30 @@
+{
+  "name": "chat-application",
+  "version": "1.0.0",
+  "description": "Real time chat application without using WebSockets",
+  "main": "main.js",
+  "scripts": {
+    "test": "node main.js"
+  },
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sachhinn/Chat-Application.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Sachhinn/Chat-Application/issues"
+  },
+  "homepage": "https://github.com/Sachhinn/Chat-Application#readme",
+  "dependencies": {
+    "dotenv": "^17.2.0",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "mongoose": "^8.16.4"
+  },
+  "devDependencies": {
+    "@types/mongoose": "^5.11.96",
+    "nodemon": "^3.1.10"
+  }
+}
