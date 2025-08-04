@@ -7,6 +7,7 @@ let isConversationPanelOpen = true;
 let activeChatPages = 1;
 let hasMoreMessage;
 let isMobile = window.matchMedia('(max-width:700px)').matches
+setAppHeight();
 document.addEventListener('DOMContentLoaded', async () => {
     getConversationList(conversations)
     //Check for mobile:::::
@@ -15,12 +16,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (isMobile && currentHash.startsWith('#chat/')) {
         let chatIdFromHash = currentHash.substring(currentHash.indexOf('/') + 1)
         let chatFind = conversations.find(convo => convo._id.toString() === chatIdFromHash)
-        chatFind?activeChat=chatFind:console.error('No Chat Found');
-        activeChatUser = activeChat.participants.find(p=>p._id.toString()!==user._id.toString())
-        activeChatUser? getMessages(activeChatUser):console.error("User not found");
+        chatFind ? activeChat = chatFind : console.error('No Chat Found');
+        activeChatUser = activeChat.participants.find(p => p._id.toString() !== user._id.toString())
+        activeChatUser ? getMessages(activeChatUser) : console.error("User not found");
         toggleChatView('chat-main'); // If already on chat, show chat main
-    } else if (isMobile) {
-        toggleChatView('nav-item-messages'); // Default to chat list on mobile
     }
     //Event Listener for Send Button:::
     const button = document.querySelector('#sendMessage')
@@ -34,7 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             sendMessage(activeChat, activeChatUser);
         }
     })
-    //Event Listener for SideBar:::::::::::::::::::::::::
+    ////////////////////////////Event Listener for SideBar:::::::::::::::::::::::::
     let chatitem;
     //selecting nav items::
     let elements = document.querySelectorAll('.nav-item')
@@ -49,18 +48,25 @@ document.addEventListener('DOMContentLoaded', async () => {
                 isConversationPanelOpen = false; // so that any function meant for conversation panel can stop
                 clearInterval(conversationIntervalId)//Clearing the Set interval meant for conversation panel
                 toggleChatView("nav-item-contacts")
-                history.pushState(element.id , '',`#${element.id}`)
+                history.pushState(element.id, '', `#${element.id}`)
                 const chatlistscroll = document.querySelectorAll(".chat-item")
                 chatlistscroll.forEach(item => item.remove())//Empty the chat list first.
                 contacts.forEach(contact => {
                     chatitem = contactsList(contact)
                     chatitem.addEventListener('click', (event) => {
-                        if(!isMobile){
+                        if (!isMobile) {
                             let pastActiveItem = document.querySelector('div.chat-item.active')
                             if (pastActiveItem) { pastActiveItem.classList.remove('active') }
                             event.currentTarget.classList.add('active')
                         }
                         activeChatUser = contact;
+                        conversations.find(convo=>{
+                            if(convo.participants.find(p=>p._id === contact._id))
+                                activeChat = convo;
+
+                        }
+                    )
+                           
                         getMessages(contact)
                         toggleChatView('chat-main')
                     })
@@ -70,18 +76,27 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ///////////IF Clicked item is Messages::::::::::::::::::
                 if (element.id === 'nav-item-messages') {
                     isConversationPanelOpen = true;
-                    if(!isMobile){
-                        let allElements = Array.from(element.parentElement.children)
-                        allElements.forEach(each => each.classList.remove('active'))
-                        element.classList.add('active')
-                    }
+                    let allElements = Array.from(element.parentElement.children)
+                    allElements.forEach(each => each.classList.remove('active'))
+                    element.classList.add('active')
                     toggleChatView('nav-item-messages')
-                    history.replaceState(element.id ,'',`#${element.id}`)
+                    history.replaceState(element.id, '', `#${element.id}`)
                     const chatlistscroll = document.querySelectorAll(".chat-item")
                     chatlistscroll.forEach(item => item.remove())
                     getConversationList(conversations)
 
                 }
+
+                else
+                    /////////////////If clicked item is profile:::::::::::::::::::::
+                    if (element.id === 'nav-item-profile') {
+                        isConversationPanelOpen = false;
+                        let allElements = Array.from(element.parentElement.children)
+                        allElements.forEach(each => each.classList.remove('active'))
+                        element.classList.add('active')
+                        toggleChatView('nav-item-profile')
+                        history.pushState(element.id, '', `#${element.id}`)
+                    }
         })
     })
     //Event listener for Search Bar:::
@@ -134,32 +149,56 @@ document.addEventListener('DOMContentLoaded', async () => {
     backButton.addEventListener('click', () => history.back())
     //Event listener for browser back/forward button::::::::::::::
     window.addEventListener('popstate', (event) => {
-        if(isMobile){
+        if (isMobile) {
             toggleChatView(event.state)
         }
     })
 })
-
-
+window.addEventListener('resize', setAppHeight)
+window.addEventListener('orientationchange', setAppHeight)
+function setAppHeight() {
+    const doc = document.documentElement;
+    doc.style.setProperty('--app-height', `${window.innerHeight}px`)
+}
 function toggleChatView(state) {
     let chatListPanel = document.querySelector('.chat-list-panel')
     let chatMain = document.querySelector('.chat-main')
-    if (!isMobile) { // If the device is not mobile
+    let userProfile = document.querySelector('.user-profile')
+    let navElements = Array.from(document.querySelector('.main-nav').children)
+    if (!isMobile) { // If the device is not mobile, show all panels
         chatListPanel.style.display = 'flex'
         chatMain.style.display = 'flex'
+        userProfile.style.display = 'none'
         return;
     }
     if (state === 'chat-main') { // If the event clicked is any chat list
         chatListPanel.style.display = 'none'
+        userProfile.style.display = 'none'
         chatMain.style.display = 'flex'
         isConversationPanelOpen = false;
-        history.pushState({ panel: 'chat-main' , converationId:activeChat._id}, '', `#chat/${activeChat._id}`)
-    }
-    else{
-        chatListPanel.style.display = 'flex'
-        chatMain.style.display = 'none'
-        isConversationPanelOpen = true;
-    }
+        history.pushState('chat-main', '', `#chat/${activeChat._id}`)
+    } else
+        if (state === 'nav-item-profile') {
+            navElements.forEach(e =>e.classList.remove('active'))
+            navElements[2].classList.add('active')
+            userProfile.style.display = 'flex'
+            chatListPanel.style.display = 'none'
+            chatMain.style.display = 'none'
+        }
+        else {
+            navElements.forEach(e =>{
+                if(e.id === state){
+                    e.classList.add('active')
+                }
+                else{
+                    e.classList.remove('active')
+                }
+            })
+            chatListPanel.style.display = 'flex' // Default 
+            userProfile.style.display = 'none'
+            chatMain.style.display = 'none'
+            isConversationPanelOpen = true;
+        }
 }
 function ifNewMessage() {
     if (setTimerId) {
@@ -187,13 +226,13 @@ function ifNewMessage() {
                     }
 
                     if (msg.sender !== user._id) {
-                        let bubble = createMsgBubble(msg , true)
+                        let bubble = createMsgBubble(msg, true)
                         bubble.scrollIntoView({ behavior: 'smooth' })
                     }
                 })
             }
         })
-    }, 3000);
+    }, 1500);
 }
 function gettingRecentChatAtTop(context, time, conversationId) {
     let chatText = document.getElementById(conversationId).querySelector(".message-text")
@@ -220,9 +259,9 @@ function getConversationList(conversations) {
                     activeChatPages = 1;
                     activeChatUser = participant;
                     activeChat = conversation;
-                    if(!isMobile){
+                    if (!isMobile) {
                         let pastchat = document.querySelector(".chat-item.active")
-                        pastchat?pastchat.classList.remove('active'):null;
+                        pastchat ? pastchat.classList.remove('active') : null;
                         event.currentTarget.classList.add('active')
                     }
                     getMessages(participant)
@@ -236,7 +275,6 @@ function getConversationList(conversations) {
     });
     setIntervalForNewMessages();
 }
-
 function chatList(participant, conversation) {
     //Creating Tags::
     const chatlistscroll = document.querySelector(".chat-list-scroll")
@@ -262,7 +300,7 @@ function chatList(participant, conversation) {
     unreadcount.classList.add('unread-count')
 
     //Filling Up::
-    img.src = "https://dummyimage.com/50X50/3c006b/FFFFFF?text=" + participant.firstName[0] + participant.lastName[0]
+    img.src ="/img/"+participant.profilePicUrl || "https://dummyimage.com/50X50/3c006b/FFFFFF?text=" + participant.firstName[0] + participant.lastName[0]
     img.alt = participant.firstName
 
     chatname.innerText = participant.firstName + " " + participant.lastName;
@@ -324,21 +362,24 @@ function createMsgBubble(msg, isSending = false) {
     const messageArea = document.querySelector('#messages-area')
     let messagebubble = document.createElement('div');
     messagebubble.classList.add('message-bubble')
+    const time = document.createElement('span')
+    time.classList.add('message-timestamp')
+    const text = document.createElement('span')
+    text.classList.add('message-text')
     if (!(msg.sender === user._id)) {
         messagebubble.classList.add('received')
     }
     else {
         messagebubble.classList.add('sent')
     }
-    messagebubble.innerText = msg.context
-    const time = document.createElement('span')
-    time.classList.add('message-timestamp')
+    text.innerText = msg.context;
     time.innerText = new Date(msg.updatedAt).toLocaleString('en-IN', { hour: 'numeric', minute: '2-digit' })
-    messagebubble.appendChild(time)
-    if(isSending){
+    messagebubble.appendChild(text);
+    messagebubble.appendChild(time);
+    if (isSending) {
         messageArea.append(messagebubble)
     }
-    else{
+    else {
         messageArea.prepend(messagebubble)
     }
     return messagebubble;
@@ -371,7 +412,7 @@ function contactsList(contact) {
 
     const chatlistscrollheading = document.querySelector("div.chat-list-header h2")
     chatlistscrollheading.innerText = "Contacts"
-    img.src = " https://dummyimage.com/50x50/3c006b/FFFFFF?text=" + contact.firstName[0] + contact.lastName[0]
+    img.src ="/img/"+contact.profilePicUrl || " https://dummyimage.com/50x50/3c006b/FFFFFF?text=" + contact.firstName[0] + contact.lastName[0]
     img.alt = contact.username
 
     chatname.innerText = contact.firstName + " " + contact.lastName;
@@ -401,7 +442,7 @@ async function getMessages(participant, pageN = 1) {
     if (messages.success) {
         //Selecting and filling up DOM Elements::
         const avatarImg = document.querySelector("#chat-avatar-main img")
-        avatarImg.src = " https://dummyimage.com/50x50/3c006b/FFFFFF?text=" + participant.firstName[0] + participant.lastName[0]
+        avatarImg.src = "/img/"+participant.profilePicUrl
 
         const name = document.querySelector('#chat-name-main')
         name.innerText = participant.firstName + " " + participant.lastName
@@ -448,7 +489,7 @@ async function sendMessage(conversation, participant) {
         sender: user._id,
         context: context,
         updatedAt: time,
-    } , true)
+    }, true)
     text.value = '';
     if (messagebubble) {
         messagebubble.scrollIntoView({ behavior: 'smooth' })
@@ -514,7 +555,7 @@ async function getUserbyUsername(username) {
         console.error(result.message)
     }
 }
-//Function to check for new messages from user different than the active user
+//Function to check for new messages from user other than the active user
 async function setIntervalForNewMessages() {
     if (conversationIntervalId) {
         clearInterval(conversationIntervalId)
@@ -546,6 +587,5 @@ async function setIntervalForNewMessages() {
             console.error("Internal Server Error Fetching New Messages")
         }
 
-    }, 5000);
+    }, 2000);
 }
-// Learn Windows back and forward button functioning and implement it in the website.

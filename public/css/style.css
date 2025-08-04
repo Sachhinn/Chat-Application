@@ -1,32 +1,19 @@
 :root {
     --primary-dark-purple: #1A0026;
-    /* Your very deep, almost black purple */
     --accent-purple: #7F00FF;
-    /* A vibrant, eye-catching purple */
     --background-light: #FFFFFF;
-    /* Pure white for main backgrounds */
     --background-subtle: #F0F2F5;
-    /* Very light gray for subtle separation */
 
     --text-dark: #333333;
-    /* Dark text for most content */
     --text-muted-dark: #666666;
-    /* Muted dark text */
     --text-light: #FFFFFF;
-    /* White text for elements on dark purple */
 
     --unread-green: #25D366;
-    /* WhatsApp's green */
-
     --border-light: #E0E0E0;
-    /* Light gray for subtle borders */
     --border-medium: #CCCCCC;
-    /* Slightly darker gray for some borders */
 
     --bubble-sent-bg: #E0E0E0;
-    /* Light gray for sent messages */
     --bubble-received-bg: #F0ECF8;
-    /* Very subtle light purple tint for received messages */
 
     --shadow-light: rgba(0, 0, 0, 0.08);
     --shadow-medium: rgba(0, 0, 0, 0.15);
@@ -41,43 +28,36 @@
 body {
     font-family: 'Inter', sans-serif;
     background-color: var(--background-subtle);
-    /* A soft background for the page */
     color: var(--text-dark);
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
+    min-height: var(--app-height);
     overflow: hidden;
-    /* Prevent body scroll, let individual panels scroll */
 }
 
 /* --- App Container Layout --- */
 .chat-app-container {
     display: flex;
     width: 100vw;
-    height: 100vh;
+    height: var(--app-height);
     max-width: 1400px;
     border-radius: 15px;
     overflow: hidden;
     box-shadow: 0 10px 30px var(--shadow-medium);
-    /* Overall app shadow */
     background-color: var(--background-light);
-    /* Main app background is white */
 }
 
 /* --- Sidebar --- */
 .sidebar {
     width: 250px;
     background-color: var(--primary-dark-purple);
-    /* Dark purple sidebar */
     display: flex;
     flex-direction: column;
     padding: 20px 0;
     align-items: center;
     box-shadow: 2px 0 10px var(--shadow-medium);
-    /* Shadow for separation */
     z-index: 20;
-    /* Ensure sidebar is above others in shadow */
 }
 
 .profile-section {
@@ -92,13 +72,11 @@ body {
     border-radius: 50%;
     overflow: hidden;
     background-color: var(--background-subtle);
-    /* Light background for avatar */
     display: flex;
     justify-content: center;
     align-items: center;
     margin: 0 auto 15px auto;
     border: 3px solid var(--text-light);
-    /* White border around avatar */
 }
 
 .profile-avatar-large img {
@@ -111,7 +89,6 @@ body {
 .username {
     font-size: 1.4em;
     color: var(--text-light);
-    /* White text on dark purple */
     font-weight: 600;
     letter-spacing: 1px;
     text-transform: uppercase;
@@ -128,7 +105,6 @@ body {
     align-items: center;
     padding: 15px 20px;
     color: var(--text-muted-dark);
-    /* Muted dark for inactive items on dark background */
     text-decoration: none;
     font-size: 1.1em;
     font-weight: 500;
@@ -142,29 +118,22 @@ body {
     width: 24px;
     text-align: center;
     color: var(--text-light);
-    /* White icons on dark purple */
 }
 
 .nav-item:hover {
     background-color: rgba(255, 255, 255, 0.1);
-    /* Slight white tint on hover */
     color: var(--text-light);
-    /* White text on hover */
 }
 
 .nav-item.active {
     background-color: var(--background-light);
-    /* White background for active item */
     color: var(--primary-dark-purple);
-    /* Dark purple text for active item */
     border-left: 5px solid var(--accent-purple);
-    /* Accent purple indicator */
     padding-left: 15px;
 }
 
 .nav-item.active i {
     color: var(--primary-dark-purple);
-    /* Dark purple icon for active item */
 }
 
 
@@ -172,19 +141,15 @@ body {
 .chat-list-panel {
     width: 350px;
     background-color: var(--background-light);
-    /* White background */
     display: flex;
     flex-direction: column;
     box-shadow: 2px 0 10px var(--shadow-light);
-    /* Subtle shadow for separation */
     border-right: 1px solid var(--border-light);
-    /* Light border separator */
 }
 
 .chat-list-header {
     padding: 20px 15px;
     background-color: var(--background-subtle);
-    /* Subtle background for header */
     border-bottom: 1px solid var(--border-light);
     display: flex;
     justify-content: space-between;
@@ -197,14 +162,12 @@ body {
 .chat-list-header h2 {
     font-size: 1.5em;
     color: var(--text-dark);
-    /* Dark text */
     font-weight: 600;
     margin: 0;
 }
 
 .chat-list-header i {
     color: var(--text-muted-dark);
-    /* Muted dark icons */
     font-size: 1.2em;
     margin-left: 15px;
     cursor: pointer;
@@ -213,7 +176,6 @@ body {
 
 .chat-list-header i:hover {
     color: var(--accent-purple);
-    /* Accent purple on hover */
 }
 
 .chat-list-scroll {
@@ -285,7 +247,6 @@ body {
 
 .chat-list-scroll::-webkit-scrollbar-thumb {
     background: var(--border-light);
-    /* Light gray scrollbar */
     border-radius: 10px;
 }
 
@@ -309,12 +270,10 @@ body {
 
 .chat-item:hover {
     background-color: var(--background-subtle);
-    /* Light gray on hover */
 }
 
 .chat-item.active {
     background-color: var(--background-subtle);
-    /* Subtle light gray for active */
     position: relative;
 }
 
@@ -326,7 +285,6 @@ body {
     bottom: 0;
     width: 4px;
     background-color: var(--accent-purple);
-    /* Accent purple indicator */
 }
 
 .chat-avatar {
@@ -337,7 +295,6 @@ body {
     flex-shrink: 0;
     margin-right: 15px;
     background-color: var(--background-subtle);
-    /* Light background for placeholder avatars */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -365,7 +322,6 @@ body {
     font-weight: 600;
     font-size: 1.1em;
     color: var(--text-dark);
-    /* Dark text for names */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -376,7 +332,6 @@ body {
 .chat-time {
     font-size: 0.8em;
     color: var(--text-muted-dark);
-    /* Muted dark for time */
     flex-shrink: 0;
 }
 
@@ -389,7 +344,6 @@ body {
 .chat-last-message .message-text {
     font-size: 0.9em;
     color: var(--text-muted-dark);
-    /* Muted dark for message preview */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -400,7 +354,6 @@ body {
 .chat-last-message.unread .message-text {
     font-weight: 500;
     color: var(--text-dark);
-    /* Darker for unread preview */
 }
 
 .unread-count {
@@ -426,14 +379,12 @@ body {
 .chat-main {
     flex-grow: 1;
     background-color: var(--background-light);
-    /* White background for chat messages */
     display: flex;
     flex-direction: column;
 }
 
 .chat-main-header {
     background-color: var(--background-subtle);
-    /* Header color matching chat list header */
     padding: 15px 20px;
     display: flex;
     align-items: center;
@@ -457,14 +408,12 @@ body {
     font-size: 1.2em;
     font-weight: 600;
     color: var(--text-dark);
-    /* Dark text */
     margin-right: 8px;
 }
 
 .chat-status-main {
     font-size: 0.9em;
     color: var(--unread-green);
-    /* Green for online status */
     font-weight: 500;
 }
 
@@ -477,14 +426,12 @@ body {
 .chat-main-actions i {
     font-size: 1.3em;
     color: var(--text-muted-dark);
-    /* Muted dark icons */
     cursor: pointer;
     transition: color 0.2s ease;
 }
 
 .chat-main-actions i:hover {
     color: var(--accent-purple);
-    /* Accent purple on hover */
 }
 
 .messages-area {
@@ -523,7 +470,6 @@ body {
     position: relative;
     font-size: 0.95em;
     color: var(--text-dark);
-    /* Dark text in bubbles */
     word-wrap: break-word;
     white-space: pre-wrap;
 }
@@ -531,7 +477,6 @@ body {
 .message-bubble .message-timestamp {
     font-size: 0.7em;
     color: var(--text-muted-dark);
-    /* Muted dark timestamp */
     position: absolute;
     bottom: 5px;
     right: 10px;
@@ -540,7 +485,6 @@ body {
 
 .message-bubble.received {
     background-color: var(--bubble-received-bg);
-    /* Very light purple tint */
     align-self: flex-start;
     border-bottom-left-radius: 5px;
     padding-right: 50px;
@@ -553,7 +497,6 @@ body {
 
 .message-bubble.sent {
     background-color: var(--bubble-sent-bg);
-    /* Light gray for sent */
     align-self: flex-end;
     border-bottom-right-radius: 5px;
     padding-right: 50px;
@@ -567,7 +510,6 @@ body {
 /* --- Chat Input Area --- */
 .chat-input-area {
     background-color: var(--background-subtle);
-    /* Background for the input bar */
     padding: 10px 20px;
     display: flex;
     align-items: center;
@@ -578,10 +520,8 @@ body {
     flex-grow: 1;
     padding: 12px 20px;
     border: 1px solid var(--border-medium);
-    /* Add a border to input */
     border-radius: 25px;
     background-color: var(--background-light);
-    /* White input background */
     color: var(--text-dark);
     font-size: 1em;
     outline: none;
@@ -625,7 +565,9 @@ body {
 .send-button:active {
     transform: scale(0.95);
 }
-
+.user-profile{
+    display: none;
+}
 /* --- Responsive Adjustments --- */
 @media (max-width: 900px) {
     .sidebar {
@@ -663,27 +605,25 @@ body {
     .chat-list-panel {
         width: 300px;
     }
+    
 }
 
 @media (max-width: 700px) {
     .chat-app-container {
         width: 100%;
         max-width: none;
-        height: 100vh;
+        min-height: var(--app-height);
         flex-direction: column;
         border-radius: 0;
         box-shadow: none;
     }
-
     .sidebar {
         order: 2;
         width: 100%;
-        height: 60px;
+        height: 50px;
         padding: 10px 0;
         flex-direction: row;
         justify-content: space-around;
-        border-bottom: 1px solid var(--border-medium);
-        /* Adjusted border color for light theme */
         box-shadow: 0 2px 5px var(--shadow-light);
     }
 
@@ -698,7 +638,8 @@ body {
     }
 
     .nav-item {
-        padding: 10px 5px;
+        padding: 10px;
+        padding-left: 15px;
     }
     .nav-item.active{
         padding:10px;
@@ -710,23 +651,21 @@ body {
     .chat-list-panel {
         order: 1;
         width: 100%;
-        height: calc(100vh - 60px);
+        height: calc(var(--app-height) - 50px);
         border-right: none;
-        /* display: none; */
-        /* border-bottom: 1px solid var(--border-light); */
     }
     
     .chat-main {
         width: 100%;
         display: none;
         order: 1;
-        height: calc(100vh - 60px);
+        height: calc(var(--app-height) - 50px);
     }
 
     .chat-main-header {
         padding: 10px;
     }
-    .chat-main-header .back-button{
+    .chat-main-header .back-button , .user-profile .back-button{
         display: block;
         border:none;
         margin-right: 10px;
@@ -750,11 +689,79 @@ body {
     .message-input {
         padding: 10px 15px;
         font-size: .9em;
+
     }
     .send-button {
         width: 40px;
         height: 40px;
         font-size: 1em;
+    }
+    .messages-area{
+        padding: 10px;
+    }
+    .message-bubble{
+        display:flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        padding: 5px 10px;
+        line-height: 1.2;
+        border-radius: 7px;
+        font-size: .85em;
+    }
+    .message-bubble.sent{border-bottom-right-radius:0 ;}
+    .message-bubble.received{border-bottom-left-radius:0 ;}
+    .message-bubble .message-timestamp{
+        position: static;
+        padding-left: 10px;
+        flex-shrink: 0;
+        padding-right:2px;
+
+    }
+    .message-bubble.sent , .message-bubble.received{
+        padding-right:0;
+    }
+    .chat-input-area{
+        padding:2px 5px;
+        & .message-input{
+            margin-right: 5px;
+        }
+    }
+    .user-profile{
+        flex-direction: column;
+        height: calc(var(--app-height) - 50px);
+        width: 100%;
+        background-color:#1A0026;
+    }
+    .user-profile .back-button{
+        background-color: transparent;
+        color: #F0F2F5;
+        font-size: inherit;
+    }
+    .user-profile-header{
+        margin: 10px;
+        font-size: 1.5em;
+        display: inline-flex;
+        gap:10px;
+    }
+    .user-profile-header span{
+        color:#F0F2F5;
+        /* font-size: 1.2em; */
+    }
+    .user-avatar{
+        width:40%;
+        min-height: 120px;
+        height:auto;
+    }
+    .user-profile .user-profile-info{
+        display:flex;
+        gap: 1.5em;
+        align-items: center;
+        line-height: 1.6;
+        color: #F0F2F5;
+        margin:10px;
+    }
+    .user-profile-icon{
+        font-size: 1.5em;
     }
 }
 

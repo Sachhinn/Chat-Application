@@ -21,6 +21,10 @@ app.use(express.text())
 
 
 const PORT = process.env.PORT || 3000
+app.get('/',(req,res) =>{
+    res.redirect('/login')
+})
+
 app.get('/login', (req, res) => {
     res.render("login")
 })
