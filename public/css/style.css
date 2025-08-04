@@ -706,7 +706,7 @@ body {
         padding: 5px 10px;
         line-height: 1.2;
         border-radius: 7px;
-        font-size: .85em;
+        font-size: .95em;
     }
     .message-bubble.sent{border-bottom-right-radius:0 ;}
     .message-bubble.received{border-bottom-left-radius:0 ;}
@@ -750,7 +750,7 @@ body {
     .user-avatar{
         width:40%;
         min-height: 120px;
-        height:auto;
+        height:40vw;
     }
     .user-profile .user-profile-info{
         display:flex;

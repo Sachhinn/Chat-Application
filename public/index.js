@@ -21,6 +21,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         activeChatUser ? getMessages(activeChatUser) : console.error("User not found");
         toggleChatView('chat-main'); // If already on chat, show chat main
     }
+    else if(currentHash === "#nav-item-profile"){
+        toggleChatView('nav-item-profile')
+    }
     //Event Listener for Send Button:::
     const button = document.querySelector('#sendMessage')
     button.addEventListener('click', async () => {
