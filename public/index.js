@@ -11,17 +11,13 @@ setAppHeight();
 document.addEventListener('DOMContentLoaded', async () => {
     getConversationList(conversations)
     //Check for mobile:::::
-    let isMobile = window.matchMedia("(max-width: 768px)").matches;
+    let isMobile = window.matchMedia("(max-width: 700px)").matches;
     let currentHash = window.location.hash;
     if (isMobile && currentHash.startsWith('#chat/')) {
-        let chatIdFromHash = currentHash.substring(currentHash.indexOf('/') + 1)
-        let chatFind = conversations.find(convo => convo._id.toString() === chatIdFromHash)
-        chatFind ? activeChat = chatFind : console.error('No Chat Found');
-        activeChatUser = activeChat.participants.find(p => p._id.toString() !== user._id.toString())
-        activeChatUser ? getMessages(activeChatUser) : console.error("User not found");
+        activeChatFromHash(currentHash)
         toggleChatView('chat-main'); // If already on chat, show chat main
     }
-    else if(currentHash === "#nav-item-profile"){
+    else if (currentHash === "#nav-item-profile") {
         toggleChatView('nav-item-profile')
     }
     //Event Listener for Send Button:::
@@ -63,13 +59,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                             event.currentTarget.classList.add('active')
                         }
                         activeChatUser = contact;
-                        conversations.find(convo=>{
-                            if(convo.participants.find(p=>p._id === contact._id))
+                        conversations.find(convo => {
+                            if (convo.participants.find(p => p._id === contact._id))
                                 activeChat = convo;
 
                         }
-                    )
-                           
+                        )
+
                         getMessages(contact)
                         toggleChatView('chat-main')
                     })
@@ -93,6 +89,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 else
                     /////////////////If clicked item is profile:::::::::::::::::::::
                     if (element.id === 'nav-item-profile') {
+                        if (!isMobile) {
+                            toggleProfile();
+                            return;
+                        }
                         isConversationPanelOpen = false;
                         let allElements = Array.from(element.parentElement.children)
                         allElements.forEach(each => each.classList.remove('active'))
@@ -163,6 +163,16 @@ function setAppHeight() {
     const doc = document.documentElement;
     doc.style.setProperty('--app-height', `${window.innerHeight}px`)
 }
+function toggleProfile() {
+    document.getElementById('user-profile').classList.toggle('active')
+}
+function activeChatFromHash(currentHash) {
+    let chatIdFromHash = currentHash.substring(currentHash.indexOf('/') + 1)
+    let chatFind = conversations.find(convo => convo._id.toString() === chatIdFromHash)
+    chatFind ? activeChat = chatFind : console.error('No Chat Found');
+    activeChatUser = activeChat.participants.find(p => p._id.toString() !== user._id.toString())
+    activeChatUser ? getMessages(activeChatUser) : console.error("User not found");
+}
 function toggleChatView(state) {
     let chatListPanel = document.querySelector('.chat-list-panel')
     let chatMain = document.querySelector('.chat-main')
@@ -171,7 +181,7 @@ function toggleChatView(state) {
     if (!isMobile) { // If the device is not mobile, show all panels
         chatListPanel.style.display = 'flex'
         chatMain.style.display = 'flex'
-        userProfile.style.display = 'none'
+        userProfile.classList.remove('active');
         return;
     }
     if (state === 'chat-main') { // If the event clicked is any chat list
@@ -179,21 +189,22 @@ function toggleChatView(state) {
         userProfile.style.display = 'none'
         chatMain.style.display = 'flex'
         isConversationPanelOpen = false;
+        if (!activeChat) {
+            activeChatFromHash(window.location.hash)
+        }
         history.pushState('chat-main', '', `#chat/${activeChat._id}`)
     } else
         if (state === 'nav-item-profile') {
-            navElements.forEach(e =>e.classList.remove('active'))
-            navElements[2].classList.add('active')
             userProfile.style.display = 'flex'
             chatListPanel.style.display = 'none'
             chatMain.style.display = 'none'
         }
         else {
-            navElements.forEach(e =>{
-                if(e.id === state){
+            navElements.forEach(e => {
+                if (e.id === state) {
                     e.classList.add('active')
                 }
-                else{
+                else {
                     e.classList.remove('active')
                 }
             })
@@ -303,7 +314,7 @@ function chatList(participant, conversation) {
     unreadcount.classList.add('unread-count')
 
     //Filling Up::
-    img.src ="/img/"+participant.profilePicUrl || "https://dummyimage.com/50X50/3c006b/FFFFFF?text=" + participant.firstName[0] + participant.lastName[0]
+    img.src = "/img/" + participant.profilePicUrl || "https://dummyimage.com/50X50/3c006b/FFFFFF?text=" + participant.firstName[0] + participant.lastName[0]
     img.alt = participant.firstName
 
     chatname.innerText = participant.firstName + " " + participant.lastName;
@@ -415,7 +426,7 @@ function contactsList(contact) {
 
     const chatlistscrollheading = document.querySelector("div.chat-list-header h2")
     chatlistscrollheading.innerText = "Contacts"
-    img.src ="/img/"+contact.profilePicUrl || " https://dummyimage.com/50x50/3c006b/FFFFFF?text=" + contact.firstName[0] + contact.lastName[0]
+    img.src = "/img/" + contact.profilePicUrl || " https://dummyimage.com/50x50/3c006b/FFFFFF?text=" + contact.firstName[0] + contact.lastName[0]
     img.alt = contact.username
 
     chatname.innerText = contact.firstName + " " + contact.lastName;
@@ -445,7 +456,7 @@ async function getMessages(participant, pageN = 1) {
     if (messages.success) {
         //Selecting and filling up DOM Elements::
         const avatarImg = document.querySelector("#chat-avatar-main img")
-        avatarImg.src = "/img/"+participant.profilePicUrl
+        avatarImg.src = "/img/" + participant.profilePicUrl
 
         const name = document.querySelector('#chat-name-main')
         name.innerText = participant.firstName + " " + participant.lastName
@@ -515,6 +526,9 @@ async function sendMessage(conversation, participant) {
         }
     }
 
+}
+//Function to delete all messages:::
+async function deleteMessages(conversation){
 }
 //Function to get the searched username
 async function getUserbyUsername(username) {

@@ -6,6 +6,7 @@ import Conversation from './models/conversation.model.js'
 import path from 'path';
 import { fileURLToPath } from 'url';
 import Message from './models/message.model.js'
+import mongoose from 'mongoose'
 const __fileName = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__fileName);
 dotenv.config();
@@ -17,8 +18,6 @@ app.use(express.urlencoded({ extended: true }))
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(express.json())
 app.use(express.text())
-
-
 
 const PORT = process.env.PORT || 3000
 app.get('/',(req,res) =>{

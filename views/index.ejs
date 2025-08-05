@@ -82,10 +82,13 @@
             </div>
         </main>
 
-        <section class="user-profile">
+        <section id="user-profile" class="user-profile">
             <div class="user-profile-header">
                 <button onclick="history.back()" id="back-button" class="back-button">
                     <i class="fas fa-arrow-left"></i>
+                </button>
+                <button onclick="toggleProfile()"  id="close-button" class="close-button">
+                    <i class="fa-solid fa-xmark"></i>
                 </button>
                 <span>Profile</span>
             </div>

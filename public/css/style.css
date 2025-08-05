@@ -212,8 +212,8 @@ body {
     transition: transform 250ms ease-in-out;
     transform-origin: top;
     width: 100%;
-    border-bottom-left-radius:5px;
-    border-bottom-right-radius:5px  ;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
 }
 
 #search-checkbox:checked+.chat-list-search-panel {
@@ -227,7 +227,8 @@ body {
     &:hover {
         color: #333333
     }
-    & button{
+
+    & button {
         width: fit-content;
         height: auto;
         padding: 5px;
@@ -394,7 +395,7 @@ body {
     z-index: 10;
 }
 
-.chat-main-header .back-button{
+.chat-main-header .back-button {
     display: none;
 }
 
@@ -565,9 +566,77 @@ body {
 .send-button:active {
     transform: scale(0.95);
 }
-.user-profile{
-    display: none;
+
+.user-profile {
+    transform: scaleX(0);
+    position: absolute;
+    right: 0;
+    z-index: 10;
+    flex-direction: column;
+    height: 100vh;
+    /* height: calc(var(--app-height) - 50px); */
+    width: 33%;
+    background-color: #1A0026;
+    transition: transform 200ms ease-in-out;
+    transform-origin: right;
 }
+.user-profile>*{
+    opacity: 0;
+    transition: opacity 100ms ease-in-out ;
+}
+
+.user-profile.active {
+    transform: scaleX(1);
+    transition: transform 200ms ease-in-out;
+}
+.user-profile.active>*{
+    opacity: 1;
+    transition: opacity 100ms ease-in-out;
+    transition-delay: 100ms;
+}
+
+.user-profile .back-button , .user-profile .close-button {
+    background-color: transparent;
+    color: #F0F2F5;
+    font-size: inherit;
+    border: none;
+    cursor: pointer;
+}
+
+.user-profile-header {
+    margin: 10px;
+    font-size: 1.5em;
+    display: inline-flex;
+    gap: 10px;
+    & .back-button{
+        display: none;
+    }
+}
+
+.user-profile-header span {
+    color: #F0F2F5;
+    /* font-size: 1.2em; */
+}
+
+.user-avatar {
+    width: 300px;
+    min-height: 300px;
+    /* height:40vw; */
+}
+
+.user-profile .user-profile-info {
+    display: flex;
+    gap: 1.5em;
+    align-items: center;
+    line-height: 1.6;
+    color: #F0F2F5;
+    margin: 10px;
+}
+
+.user-profile-icon {
+    font-size: 1.5em;
+}
+
 /* --- Responsive Adjustments --- */
 @media (max-width: 900px) {
     .sidebar {
@@ -583,7 +652,11 @@ body {
         width: 70px;
         height: 70px;
     }
-
+    .user-avatar{
+        width: 200px;
+        min-height: 120px;
+        height: 200px;
+    }
     .username {
         display: none;
     }
@@ -605,7 +678,7 @@ body {
     .chat-list-panel {
         width: 300px;
     }
-    
+
 }
 
 @media (max-width: 700px) {
@@ -617,6 +690,7 @@ body {
         border-radius: 0;
         box-shadow: none;
     }
+
     .sidebar {
         order: 2;
         width: 100%;
@@ -641,9 +715,11 @@ body {
         padding: 10px;
         padding-left: 15px;
     }
-    .nav-item.active{
-        padding:10px;
+
+    .nav-item.active {
+        padding: 10px;
     }
+
     .nav-item i {
         font-size: 1.4em;
     }
@@ -654,7 +730,7 @@ body {
         height: calc(var(--app-height) - 50px);
         border-right: none;
     }
-    
+
     .chat-main {
         width: 100%;
         display: none;
@@ -665,11 +741,14 @@ body {
     .chat-main-header {
         padding: 10px;
     }
-    .chat-main-header .back-button , .user-profile .back-button{
+
+    .chat-main-header .back-button,
+    .user-profile .back-button {
         display: block;
-        border:none;
+        border: none;
         margin-right: 10px;
     }
+
     .chat-avatar-main {
         width: 40px;
         height: 40px;
@@ -679,9 +758,11 @@ body {
     .chat-name-main {
         font-size: 1.1em;
     }
-    .chat-status-main{
+
+    .chat-status-main {
         font-size: .8em;
     }
+
     .chat-main-actions i {
         font-size: 1.1em;
     }
@@ -691,16 +772,19 @@ body {
         font-size: .9em;
 
     }
+
     .send-button {
         width: 40px;
         height: 40px;
         font-size: 1em;
     }
-    .messages-area{
+
+    .messages-area {
         padding: 10px;
     }
-    .message-bubble{
-        display:flex;
+
+    .message-bubble {
+        display: flex;
         justify-content: space-between;
         align-items: flex-end;
         padding: 5px 10px;
@@ -708,61 +792,59 @@ body {
         border-radius: 7px;
         font-size: .95em;
     }
-    .message-bubble.sent{border-bottom-right-radius:0 ;}
-    .message-bubble.received{border-bottom-left-radius:0 ;}
-    .message-bubble .message-timestamp{
+
+    .message-bubble.sent {
+        border-bottom-right-radius: 0;
+    }
+
+    .message-bubble.received {
+        border-bottom-left-radius: 0;
+    }
+
+    .message-bubble .message-timestamp {
         position: static;
         padding-left: 10px;
         flex-shrink: 0;
-        padding-right:2px;
+        padding-right: 2px;
 
     }
-    .message-bubble.sent , .message-bubble.received{
-        padding-right:0;
+
+    .message-bubble.sent,
+    .message-bubble.received {
+        padding-right: 0;
     }
-    .chat-input-area{
-        padding:2px 5px;
-        & .message-input{
+
+    .chat-input-area {
+        padding: 2px 5px;
+
+        & .message-input {
             margin-right: 5px;
         }
     }
     .user-profile{
-        flex-direction: column;
+        position:static;
         height: calc(var(--app-height) - 50px);
         width: 100%;
-        background-color:#1A0026;
+        transform: scaleX(1);
+        transition:none;
+        display: none;
     }
-    .user-profile .back-button{
-        background-color: transparent;
-        color: #F0F2F5;
-        font-size: inherit;
+    .user-profile>*{
+        opacity: 1;
+        transition: none;
     }
-    .user-profile-header{
-        margin: 10px;
-        font-size: 1.5em;
-        display: inline-flex;
-        gap:10px;
+    .user-profile-header .close-button{
+        display: none;
     }
-    .user-profile-header span{
-        color:#F0F2F5;
-        /* font-size: 1.2em; */
+    .user-profile-header .back-button{
+        display: block;
     }
-    .user-avatar{
-        width:40%;
+    .user-profile .user-avatar{
+        width: 40vw;
         min-height: 120px;
-        height:40vw;
+        height: 40vw;
     }
-    .user-profile .user-profile-info{
-        display:flex;
-        gap: 1.5em;
-        align-items: center;
-        line-height: 1.6;
-        color: #F0F2F5;
-        margin:10px;
-    }
-    .user-profile-icon{
-        font-size: 1.5em;
-    }
+
 }
 
 @media (max-width: 480px) {
