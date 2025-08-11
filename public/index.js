@@ -6,6 +6,7 @@ let ScrollTimeoutId;
 let isConversationPanelOpen = true;
 let activeChatPages = 1;
 let hasMoreMessage;
+let optionPanelOpen = false;
 let isMobile = window.matchMedia('(max-width:700px)').matches
 setAppHeight();
 document.addEventListener('DOMContentLoaded', async () => {
@@ -124,6 +125,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             })
         }
+        if (optionPanelOpen) {
+            let option = document.querySelector('.chat-item-options.active')
+            if(!option.contains(event.target)){
+                option.classList.remove('active')
+                optionPanelOpen = false;
+            }
+        }
     }))
     // Event listener for Previous messages::::::::::::::::
     let messageArea = document.getElementById('messages-area')
@@ -155,6 +163,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (isMobile) {
             toggleChatView(event.state)
         }
+    })
+    //Event listener for Buttons::::::::::::::::::
+    let ChatOptionBtns = Array.from(document.getElementsByClassName('chat-item-options-btn'))
+    ChatOptionBtns.forEach(btn => {
+        btn.addEventListener('click', event => {
+            let allOptions = Array.from(document.getElementsByClassName('chat-item-options'))
+            allOptions.forEach(option => {
+                if (option === btn.nextElementSibling) {
+                    option.classList.toggle('active')
+                    optionPanelOpen = option.classList.contains('active') ? true : false;
+                    option.addEventListener('click', event => {
+                        if(confirm('Delete all Messages?')){
+                            console.log(event.target.dataset.conversationid)
+                            let result = deleteAllMessages(event.target.dataset.conversationid);
+                        }
+                        event.stopPropagation();
+                    }, true)
+                } else {
+                    option.classList.remove('active');
+                }
+
+            })
+            event.stopPropagation();
+        })
     })
 })
 window.addEventListener('resize', setAppHeight)
@@ -312,14 +344,17 @@ function chatList(participant, conversation) {
     messagetext.classList.add('message-text')
     const unreadcount = document.createElement('span')
     unreadcount.classList.add('unread-count')
-
+    const menu = document.createElement('div')
+    menu.classList.add('chat-list-menu');
+    const options = document.createElement('div')
+    options.classList.add('chat-item-options')
     //Filling Up::
     img.src = "/img/" + participant.profilePicUrl || "https://dummyimage.com/50X50/3c006b/FFFFFF?text=" + participant.firstName[0] + participant.lastName[0]
     img.alt = participant.firstName
 
     chatname.innerText = participant.firstName + " " + participant.lastName;
+    conversation.lastMessage ? messagetext.innerText = conversation.lastMessage : null;
 
-    messagetext.innerText = conversation.lastMessage
 
     let pastdate = new Date(conversation.lastMessageAt)
     chattime.innerText = getTime(pastdate)
@@ -327,6 +362,10 @@ function chatList(participant, conversation) {
     heading.innerText = 'Message'
 
     chatitem.id = conversation._id;
+
+    menu.innerHTML += '<i  class="fa-solid fa-ellipsis-vertical chat-item-options-btn"></i>'
+
+    options.innerHTML += `<p data-ConversationId="${conversation._id}" class="chat-item-option">Delete Conversation</p>`
     //Appending into DOM:
     chatavatar.appendChild(img)
     chatheader.appendChild(chatname)
@@ -335,8 +374,10 @@ function chatList(participant, conversation) {
     chatlastmessage.appendChild(unreadcount)
     chatinfo.appendChild(chatheader)
     chatinfo.appendChild(chatlastmessage)
+    menu.appendChild(options)
     chatitem.appendChild(chatavatar)
     chatitem.appendChild(chatinfo)
+    !isMobile ? chatitem.appendChild(menu) : null;
     chatlistscroll.appendChild(chatitem)
 
     return chatitem
@@ -528,7 +569,12 @@ async function sendMessage(conversation, participant) {
 
 }
 //Function to delete all messages:::
-async function deleteMessages(conversation){
+async function deleteAllMessages(conversationId) {
+    let result =await fetch(`/deleteAllMessages/${conversationId}`).then(response => response.json())
+    if (result.success) {
+        console.log(result.message)
+    }
+    else { console.error(result.message) }
 }
 //Function to get the searched username
 async function getUserbyUsername(username) {
@@ -606,3 +652,7 @@ async function setIntervalForNewMessages() {
 
     }, 2000);
 }
+//Profile of other user.
+//Add authentication and authorization
+//Archives section
+//date bubble in chat-main

@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import jwt from "jsonwebtoken";
+import bcrypt from 'bcrypt'
 const userSchema = new mongoose.Schema({
     username: {
         type: String,
@@ -48,17 +50,48 @@ const userSchema = new mongoose.Schema({
 userSchema.methods.getContacts = function () {
     return this.contacts
 }
-// Method on the schema of the Users itslef::
+
+userSchema.methods.isPasswordCorrect =async function(password){
+    return await bcrypt.compare(password , this.passwordHash)
+}
+//JSON WEB TOKEN ACCESS KEY GENERATION:::
+userSchema.methods.generateAccessToken = function(){
+    return jwt.sign(
+        {
+            _id :this._id,
+            username : this.username
+        },
+        process.env.ACCESS_TOKEN_SECRET,
+        {expiresIn:process.env.ACCESS_TOKEN_EXPIRY}
+    )
+}
+
+//JSON WEB TOKEN REFRESH KEY GENERATION:::
+userSchema.methods.generateRefreshToken = function(){
+    return jwt.sign(
+        {
+            _id :this._id,
+        },
+        process.env.REFRESH_TOKEN_SECRET,
+        {expiresIn:process.env.REFRESH_TOKEN_EXPIRY}
+    )
+}
+
+// Method on the schema of the Users itself::
 userSchema.statics.findByUsername = function (name) {
     return this.where({ username: new RegExp(name, 'i') }).findOne()
 }
+
 //Method only can be used after a query:
 userSchema.query.byname = function (name) {
     return this.where({ "profile.firstName": new RegExp(name, 'i') }).findOne()
 }
 //Method/Middleware to use before using the query: save() 
-userSchema.pre('save', function (next) {
+userSchema.pre('save', async function (next) {
     this.updatedAt = Date.now()
+    if(this.isModified('passwordHash')){
+        this.passwordHash = await bcrypt.hash(this.passwordHash , 8)
+    }
     next();
 })
 export default mongoose.model('User', userSchema);

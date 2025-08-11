@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>All Users</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            padding: 32px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 32px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        th, td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e0e0e0;
+            text-align: left;
+        }
+        th {
+            background: #f0f0f0;
+            color: #555;
+        }
+        tr:hover {
+            background: #f9f9f9;
+        }
+        .bio {
+            color: #666;
+            font-size: 0.98em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>All Users</h1>
+        <table id="usersTable">
+            <thead>
+                <tr>
+                    <th>Profile Picture</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Username</th>
+                    <th>ID</th>
+                    <th>Bio</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- User rows will be inserted here -->
+            </tbody>
+        </table>
+    </div>
+    <script>
+        async function fetchUsers() {
+            try {
+                const response = await fetch('/allUsers',{method:'POST'});
+                const users = await response.json();
+                const tbody = document.querySelector('#usersTable tbody');
+                tbody.innerHTML = '';
+                users.forEach(user => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>
+                                <img src="/img/${user.profilePicUrl || 'https://via.placeholder.com/100'}" alt="Profile Picture" style="width:100px; height:100px; object-fit:cover; border-radius:50%;">
+                        </td>
+                        <td>${user.firstName || ''}</td>
+                        <td>${user.lastName || ''}</td>
+                        <td>${user.username || ''}</td>
+                        <td>${user._id || ''}</td>
+                        <td class="bio">${user.bio || ''}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                alert('Failed to fetch users.');
+            }
+        }
+        fetchUsers();
+    </script>
+</body>
+</html>

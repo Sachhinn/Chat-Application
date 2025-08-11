@@ -5,7 +5,9 @@ import User from './models/user.model.js'
 import Conversation from './models/conversation.model.js'
 import path from 'path';
 import { fileURLToPath } from 'url';
-import Message from './models/message.model.js'
+import Message from './models/message.model.js';
+import { upload } from './middleware/multer.middleware.js'
+import { uploadOnCloudinary } from './utils/cloudinary.js'
 import mongoose from 'mongoose'
 const __fileName = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__fileName);
@@ -17,15 +19,20 @@ app.set('view engine', 'ejs')
 app.use(express.urlencoded({ extended: true }))
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(express.json())
-app.use(express.text())
+app.use(express.text()) 
+
+await Conversation.findOneAndDelete({_id :new mongoose.Types.ObjectId('6898cd6f15da43584864009e')})
 
 const PORT = process.env.PORT || 3000
-app.get('/',(req,res) =>{
+app.get('/', (req, res) => {
     res.redirect('/login')
 })
 
 app.get('/login', (req, res) => {
     res.render("login")
+})
+app.get('/register',(req,res)=>{
+    res.render('register')
 })
 app.get('/users/:id', async (req, res) => {
     const id = req.params.id;
@@ -39,18 +46,64 @@ app.get('/users/:id', async (req, res) => {
             sort: { updatedAt: -1 }
         }
     }).findOne()
-    // const user = await User.findById("688664a21a8ea7fbda6b33a9").populate('contacts','firstName lastName')
     res.render('index', { user, contacts: user.contacts, conversations: user.conversations })
 
 })
+app.get('/deleteAllMessages/:id', async (req, res) => {
+    let conversationId = req.params
+    console.log(conversationId)
+    let result = await Message.deleteMany({conversationId: new mongoose.Types.ObjectId(conversationId)})
+    await Conversation.findByIdAndUpdate(new mongoose.Types.ObjectId(conversationId) , {
+        lastMessage:null,
+        lastMessageBy:null,
+        lastMessageAt: new Date()
+    })
+    res.status(201).json({success: true , message: { deletedMessages: result.deletedCount}})
+})
+app.get('/all_users', (req, res) => {
+    res.render('all_users')
+})
+app.post('/allUsers', async (req, res) => {
+    const allUsers = await User.find({}).sort({ firstName: 1 })
+    res.status(200).json(allUsers)
+})
+app.post('/register', upload.single('avatar'), async (req, res) => {
+    const { username, password, firstName, lastName, bio } = req.body    
+    if ([username, password, firstName, lastName].some((field) => field?.trim() === "")) {
+        res.status(400).json({ success: false, message: 'Provide All Fields.' })
+    }
+    let doExist = await User.findOne({ username })
+    doExist && res.status(409).json({ success: false, message: 'Username Already Exists!' })
+    let avatar;
+    // if (req.file) {
+    //     avatar = await uploadOnCloudinary(req.file.path)
+    //     console.log(avatar)
+    // }
+    let user = await User.create({
+        firstName,
+        lastName,
+        username: username.toLowerCase(),
+        passwordHash: password,
+        bio,
+        profilePicUrl: req.file.originalname || ''
+    })
+    const createdUser = await User.findById(user._id).select('-passwordHash')
+    if(!createdUser){
+        res.status(500).json({success:false,message:'Could not register, please try again.'})
+    }
+    res.redirect(`/users/${createdUser._id}`)
+})
 app.post('/login', async (req, res) => {
+    console.log('req received')
     const { username, password } = req.body;
+    console.log(req.body)
     try {
         let user = await User.findOne({ username: username })
         if (user) {
             console.log("User found")
-            if (user.passwordHash == password) {
-                res.redirect(`/users/${user._id}`)
+            if (await user.isPasswordCorrect(password)) {
+                delete user.passwordHash;
+                res.status(201).json({success:true,message:user})
             } else {
                 console.log("Password didn't match")
                 console.log(user.passwordHash, password)
@@ -59,15 +112,16 @@ app.post('/login', async (req, res) => {
         } else {
             throw new Error("User Not Found. Please check the username!")
         }
-    } catch (e) {
-        res.send("Error :", e)
+    } catch (error) 
+    {   console.error(error)
+        res.json({success:false,message:error.message})
     }
 })
 app.post('/getMessages', async (req, res) => {
-    const { participant, user , pageN} = req.body
+    const { participant, user, pageN } = req.body
     try {
         const conversationId = await Conversation.startConversation(user, participant)
-        let messages = await Message.getOnePageMessages(conversationId , pageN)
+        let messages = await Message.getOnePageMessages(conversationId, pageN)
         // let messages = await Message.find({conversationId:conversationId})
         // messages = messages.reverse()
         res.status(201).json({ success: true, message: messages })
@@ -105,7 +159,7 @@ app.post('/addToContacts', async (req, res) => {
     const { userId, connectionUserId } = req.body;
     console.log("User Connection request::")
     const user = await User.findByIdAndUpdate(userId, { $addToSet: { contacts: connectionUserId } })
-    res.json({ success: true, message: "Received request" })
+    res.json({ success: true, message: "Contacts Updated!" })
 })
 app.post('/removeFromContacts', async (req, res) => {
     const { userId, connectionUserId } = req.body;
@@ -135,7 +189,7 @@ app.post('/ifnewConversationMessage', async (req, res) => {
             convoTime = new Date(pastConvo.lastMessageAt)
             const anyNewMsg = await Conversation.findById(pastConvo._id).where('lastMessageAt').gt(convoTime)
             if (anyNewMsg) {
-                if(anyNewMsg.lastMessageAt.getTime() > convoTime.getTime()){
+                if (anyNewMsg.lastMessageAt.getTime() > convoTime.getTime()) {
                     obj.push(anyNewMsg)
                 }
             }
@@ -147,8 +201,8 @@ app.post('/ifnewConversationMessage', async (req, res) => {
             res.json({ success: false, message: 'No New Message' })
         }
     } catch (error) {
-        console.log(error , error.message)
-        res.status(500).json({success:false ,message:'Internal Server Error'})
+        console.log(error, error.message)
+        res.status(500).json({ success: false, message: 'Internal Server Error' })
     }
 
 })
