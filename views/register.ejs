@@ -133,7 +133,37 @@
             font-size: 0.95em;
             display: none;
         }
+        @media (max-width: 500px) {
+            .container {
+                max-width: 95vw;
+                margin: 16px auto;
+                padding: 16px;
+            }
+            h1, h2 {
+                font-size: 1.5em;
+                margin-bottom: 12px;
+            }
+            .form-group label {
+                font-size: 1em;
+            }
+            input[type="text"],
+            input[type="file"],
+            input[type="password"],
+            textarea {
+                font-size: 1em;
+                padding: 7px;
+            }
+            button {
+                font-size: 1em;
+                padding: 9px;
+            }
+            .preview-img {
+                max-width: 80px;
+                max-height: 80px;
+            }
+        }
     </style>
+    
 </head>
 
 <body>
