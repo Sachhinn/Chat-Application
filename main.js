@@ -3,15 +3,17 @@ import dotenv from 'dotenv'
 import { connectDB } from './config/db.js'
 import User from './models/user.model.js'
 import Conversation from './models/conversation.model.js'
-import path from 'path';
-import { fileURLToPath } from 'url';
 import Message from './models/message.model.js';
+import path from 'path';
+import fs from 'fs/promises';
+import { fileURLToPath } from 'url';
 import { upload } from './middleware/multer.middleware.js'
-import { uploadOnCloudinary } from './utils/cloudinary.js'
+import {v2 as cloudinary} from 'cloudinary'
+import { uploadOnCloudinaryWithPublicId } from './utils/cloudinary.js'
 import mongoose from 'mongoose'
 const __fileName = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__fileName);
-dotenv.config();
+dotenv.config({ quiet: true });
 connectDB();
 export const app = express()
 fileURLToPath
@@ -19,46 +21,55 @@ app.set('view engine', 'ejs')
 app.use(express.urlencoded({ extended: true }))
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(express.json())
-app.use(express.text()) 
-
-await Conversation.findOneAndDelete({_id :new mongoose.Types.ObjectId('6898cd6f15da43584864009e')})
-
+app.use(express.text())
 const PORT = process.env.PORT || 3000
+
+// let result = await User.deleteOne({_id:'689b8062c7da970ba76fca9e'})
+// console.log(result)
+
 app.get('/', (req, res) => {
     res.redirect('/login')
 })
-
 app.get('/login', (req, res) => {
     res.render("login")
 })
-app.get('/register',(req,res)=>{
+app.get('/register', (req, res) => {
     res.render('register')
 })
 app.get('/users/:id', async (req, res) => {
-    const id = req.params.id;
-    const user = await User.where('_id').equals(id).populate('contacts', 'firstName , lastName , profilePicUrl , bio , status').populate({
-        path: "conversations",
-        populate: {
-            path: "participants",
-            select: "firstName , lastName , profilePicUrl , createdAt , status"
-        },
-        options: {
-            sort: { updatedAt: -1 }
+    try {
+        const id = req.params.id;
+        const user = await User.where('_id').equals(id).populate('contacts', 'firstName , lastName , profilePicUrl , bio , status').populate({
+            path: "conversations",
+            populate: {
+                path: "participants",
+                select: "firstName , lastName , profilePicUrl , createdAt , status"
+            },
+            options: {
+                sort: { updatedAt: -1 }
+            }
+        }).findOne()
+        if(user){
+            res.render('index', { user, contacts: user.contacts?user.contacts:null, conversations: user.conversations?user.conversations:null })
         }
-    }).findOne()
-    res.render('index', { user, contacts: user.contacts, conversations: user.conversations })
+        else{
+            throw new Error('Cannot Find the user')
+        }
+    } catch (error) {
+        res.status(501).json({success:false,message:error.message})
+    }
 
 })
 app.get('/deleteAllMessages/:id', async (req, res) => {
     let conversationId = req.params
     console.log(conversationId)
-    let result = await Message.deleteMany({conversationId: new mongoose.Types.ObjectId(conversationId)})
-    await Conversation.findByIdAndUpdate(new mongoose.Types.ObjectId(conversationId) , {
-        lastMessage:null,
-        lastMessageBy:null,
+    let result = await Message.deleteMany({ conversationId: new mongoose.Types.ObjectId(conversationId) })
+    await Conversation.findByIdAndUpdate(new mongoose.Types.ObjectId(conversationId), {
+        lastMessage: null,
+        lastMessageBy: null,
         lastMessageAt: new Date()
     })
-    res.status(201).json({success: true , message: { deletedMessages: result.deletedCount}})
+    res.status(201).json({ success: true, message: { deletedMessages: result.deletedCount } })
 })
 app.get('/all_users', (req, res) => {
     res.render('all_users')
@@ -68,42 +79,47 @@ app.post('/allUsers', async (req, res) => {
     res.status(200).json(allUsers)
 })
 app.post('/register', upload.single('avatar'), async (req, res) => {
-    const { username, password, firstName, lastName, bio } = req.body    
+    //Check why does it throw : "an error occured" when registering
+    const { username, password, firstName, lastName, bio } = req.body
     if ([username, password, firstName, lastName].some((field) => field?.trim() === "")) {
         res.status(400).json({ success: false, message: 'Provide All Fields.' })
     }
     let doExist = await User.findOne({ username })
-    doExist && res.status(409).json({ success: false, message: 'Username Already Exists!' })
+    if(doExist){
+        res.status(409).json({ success: false, message: 'Username Already Exists!' }) 
+        return;
+    }
     let avatar;
-    // if (req.file) {
-    //     avatar = await uploadOnCloudinary(req.file.path)
-    //     console.log(avatar)
-    // }
+    if (req.file) {
+        avatar = await uploadOnCloudinaryWithPublicId(req.file.path , req.file.filename.split('.')[0])
+        if (!avatar) { res.status(501).json({ success: false, message: 'No Profile picture link generated! Try again' }) }
+        console.log(avatar.url)
+    }
     let user = await User.create({
         firstName,
         lastName,
         username: username.toLowerCase(),
         passwordHash: password,
         bio,
-        profilePicUrl: req.file.originalname || ''
+        profilePicUrl: avatar?.url || ''
     })
-    const createdUser = await User.findById(user._id).select('-passwordHash')
-    if(!createdUser){
-        res.status(500).json({success:false,message:'Could not register, please try again.'})
+    const createdUser = await User.findById(user._id)
+    if (!createdUser) {
+        res.status(500).json({ success: false, message: 'Could not register, please try again.' })
     }
-    res.redirect(`/users/${createdUser._id}`)
+    res.status(201).json({success:true,message:createdUser})
 })
 app.post('/login', async (req, res) => {
     console.log('req received')
     const { username, password } = req.body;
     console.log(req.body)
     try {
-        let user = await User.findOne({ username: username })
+        let user = await User.findOne({ username: username }).select('+passwordHash')
         if (user) {
             console.log("User found")
             if (await user.isPasswordCorrect(password)) {
                 delete user.passwordHash;
-                res.status(201).json({success:true,message:user})
+                res.status(201).json({ success: true, message: user })
             } else {
                 console.log("Password didn't match")
                 console.log(user.passwordHash, password)
@@ -112,9 +128,9 @@ app.post('/login', async (req, res) => {
         } else {
             throw new Error("User Not Found. Please check the username!")
         }
-    } catch (error) 
-    {   console.error(error)
-        res.json({success:false,message:error.message})
+    } catch (error) {
+        console.error(error)
+        res.json({ success: false, message: error.message })
     }
 })
 app.post('/getMessages', async (req, res) => {

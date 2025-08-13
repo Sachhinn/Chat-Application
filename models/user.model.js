@@ -12,16 +12,17 @@ const userSchema = new mongoose.Schema({
     },
     passwordHash: {
         type: String,
-        // required:true
+        required:true,
+        select:false
     },
     firstName: {
         type: String,
-        // required:true,
+        required:true,
         maxlength: 50
     },
     lastName: {
         type: String,
-        // required:true,
+        required:true,
         maxlength: 50
     },
     profilePicUrl: {

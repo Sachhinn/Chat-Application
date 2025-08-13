@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     elements.forEach(element => {
         element.addEventListener('click', (event) => {
 
-            ///////////////IF clicked Item is COntacts::::::::::::::::::::::::
+            ///////////////IF clicked Item is Contacts::::::::::::::::::::::::
             if (element.id === "nav-item-contacts") { //If the clicked item is contacts::
                 let allElements = Array.from(element.parentElement.children)//removing and adding active nav-item::
                 allElements.forEach(each => each.classList.remove('active'))
@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         })
     })
     //Event listener for Search Bar:::
-    document.addEventListener('mousedown', (event => {
+    document.addEventListener('click', (event => {
         let searchPanel = document.querySelector('.chat-list-search-panel')
         let checkbox = document.querySelector('#search-checkbox')
         let checkboxLabel = document.querySelector('#search-checkbox-label')
@@ -126,10 +126,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             })
         }
         if (optionPanelOpen) {
-            let option = document.querySelector('.chat-item-options.active')
-            if(!option.contains(event.target)){
-                option.classList.remove('active')
-                optionPanelOpen = false;
+            let options = document.querySelectorAll('.chat-item-options.active')
+            for (const option of options) {
+                if (!option.parentElement.contains(event.target)) {
+                    option.classList.remove('active')
+                    optionPanelOpen = false;
+                }
             }
         }
     }))
@@ -164,30 +166,39 @@ document.addEventListener('DOMContentLoaded', async () => {
             toggleChatView(event.state)
         }
     })
-    //Event listener for Buttons::::::::::::::::::
-    let ChatOptionBtns = Array.from(document.getElementsByClassName('chat-item-options-btn'))
-    ChatOptionBtns.forEach(btn => {
-        btn.addEventListener('click', event => {
-            let allOptions = Array.from(document.getElementsByClassName('chat-item-options'))
-            allOptions.forEach(option => {
-                if (option === btn.nextElementSibling) {
-                    option.classList.toggle('active')
-                    optionPanelOpen = option.classList.contains('active') ? true : false;
-                    option.addEventListener('click', event => {
-                        if(confirm('Delete all Messages?')){
-                            console.log(event.target.dataset.conversationid)
-                            let result = deleteAllMessages(event.target.dataset.conversationid);
-                        }
-                        event.stopPropagation();
-                    }, true)
-                } else {
-                    option.classList.remove('active');
-                }
 
-            })
-            event.stopPropagation();
-        })
-    })
+    //Event listener for Buttons ::::::::::::::::::
+
+    // let ChatOptionBtns = Array.from(document.getElementsByClassName('chat-item-options-btn'))
+    // ChatOptionBtns.forEach(btn => {
+        // btn.addEventListener('click', event => {
+        //     let anyActiveChatOptions = document.querySelectorAll('.chat-item-options.active')
+        //     if (anyActiveChatOptions.length > 0) {
+        //         for (const each of anyActiveChatOptions) {
+        //             if (btn.nextElementSibling !== each) {
+        //                 each.classList.remove('active')
+        //             }
+        //         }
+        //     }
+        //     let allOptions = btn.nextElementSibling
+        //     optionPanelOpen = allOptions.classList.toggle('active')
+        //     event.stopPropagation();
+        // })
+        // let allOptions = btn.nextElementSibling
+        // allOptions.addEventListener('click', event => {
+        //     if (event.target.dataset.action === 'delete-conversation') {
+        //         if (confirm('Delete all Messages?')) {
+        //             console.log(event.target.dataset.conversationid)
+        //             deleteAllMessages(event.target.dataset.conversationid);
+        //         } else {
+        //             allOptions.classList.remove('active')
+        //             optionPanelOpen = false;
+        //             event.preventDefault();
+        //         }
+        //     }
+        //     event.stopPropagation();
+        // }, false)
+    // })
 })
 window.addEventListener('resize', setAppHeight)
 window.addEventListener('orientationchange', setAppHeight)
@@ -295,7 +306,7 @@ function getConversationList(conversations) {
         conversation.participants.forEach(participant => {
             if (participant._id != user._id) {
                 chatitem = chatList(participant, conversation)
-                if (index == 0 && !isMobile) {
+                if (index == 0 && !isMobile && !activeChat) {
                     activeChatUser = participant;
                     activeChat = conversation;
                     chatitem.classList.add('active');
@@ -313,6 +324,34 @@ function getConversationList(conversations) {
                     getMessages(participant)
                     toggleChatView('chat-main')
                 })
+                let btn = chatitem.lastChild.firstChild
+                btn.addEventListener('click', event => {
+                    let anyActiveChatOptions = document.querySelectorAll('.chat-item-options.active')
+                    if (anyActiveChatOptions.length > 0) {
+                        for (const each of anyActiveChatOptions) {
+                            if (btn.nextElementSibling !== each) {
+                                each.classList.remove('active')
+                            }
+                        }
+                    }
+                    let allOptions = btn.nextElementSibling
+                    optionPanelOpen = allOptions.classList.toggle('active')
+                    event.stopPropagation();
+                })
+                let allOptions = btn.nextElementSibling
+                allOptions.addEventListener('click', event => {
+                    if (event.target.dataset.action === 'delete-conversation') {
+                        if (confirm('Delete all Messages?')) {
+                            console.log(event.target.dataset.conversationid)
+                            deleteAllMessages(event.target.dataset.conversationid);
+                        } else {
+                            allOptions.classList.remove('active')
+                            optionPanelOpen = false;
+                            event.preventDefault();
+                        }
+                    }
+                    event.stopPropagation();
+                }, false)
             }
             else {
                 return;
@@ -349,7 +388,7 @@ function chatList(participant, conversation) {
     const options = document.createElement('div')
     options.classList.add('chat-item-options')
     //Filling Up::
-    img.src = "/img/" + participant.profilePicUrl || "https://dummyimage.com/50X50/3c006b/FFFFFF?text=" + participant.firstName[0] + participant.lastName[0]
+    img.src = participant.profilePicUrl || "https://dummyimage.com/50X50/3c006b/FFFFFF?text=" + participant.firstName[0] + participant.lastName[0]
     img.alt = participant.firstName
 
     chatname.innerText = participant.firstName + " " + participant.lastName;
@@ -365,7 +404,7 @@ function chatList(participant, conversation) {
 
     menu.innerHTML += '<i  class="fa-solid fa-ellipsis-vertical chat-item-options-btn"></i>'
 
-    options.innerHTML += `<p data-ConversationId="${conversation._id}" class="chat-item-option">Delete Conversation</p>`
+    options.innerHTML += `<p data-action="delete-conversation" data-ConversationId="${conversation._id}" class="chat-item-option">Delete Conversation</p>`
     //Appending into DOM:
     chatavatar.appendChild(img)
     chatheader.appendChild(chatname)
@@ -467,7 +506,7 @@ function contactsList(contact) {
 
     const chatlistscrollheading = document.querySelector("div.chat-list-header h2")
     chatlistscrollheading.innerText = "Contacts"
-    img.src = "/img/" + contact.profilePicUrl || " https://dummyimage.com/50x50/3c006b/FFFFFF?text=" + contact.firstName[0] + contact.lastName[0]
+    img.src = contact.profilePicUrl || " https://dummyimage.com/50x50/3c006b/FFFFFF?text=" + contact.firstName[0] + contact.lastName[0]
     img.alt = contact.username
 
     chatname.innerText = contact.firstName + " " + contact.lastName;
@@ -497,7 +536,7 @@ async function getMessages(participant, pageN = 1) {
     if (messages.success) {
         //Selecting and filling up DOM Elements::
         const avatarImg = document.querySelector("#chat-avatar-main img")
-        avatarImg.src = "/img/" + participant.profilePicUrl
+        avatarImg.src = participant.profilePicUrl || " https://dummyimage.com/50x50/3c006b/FFFFFF?text=" + participant.firstName[0] + participant.lastName[0]
 
         const name = document.querySelector('#chat-name-main')
         name.innerText = participant.firstName + " " + participant.lastName
@@ -570,7 +609,7 @@ async function sendMessage(conversation, participant) {
 }
 //Function to delete all messages:::
 async function deleteAllMessages(conversationId) {
-    let result =await fetch(`/deleteAllMessages/${conversationId}`).then(response => response.json())
+    let result = await fetch(`/deleteAllMessages/${conversationId}`).then(response => response.json())
     if (result.success) {
         console.log(result.message)
     }
@@ -656,3 +695,5 @@ async function setIntervalForNewMessages() {
 //Add authentication and authorization
 //Archives section
 //date bubble in chat-main
+//Set the width of side-navbar so that it doesn't change when changing chats.
+//Add an animation till the user gets registered on register page

@@ -14,7 +14,13 @@
         <aside class="sidebar">
             <div class="profile-section">
                 <div class="profile-avatar-large">
-                    <img src="/img/<%= user.profilePicUrl %>" alt="<%= user.firstname %> Profile">
+                    <img src="
+                        <% if (user.profilePicUrl) { %>
+                         <%= user.profilePicUrl %>
+                        <% } else { %>
+                        https://placehold.co/100x100/3c006b/FFFFFF?text=<%= user.firstName.charAt(0) + user.lastName.charAt(0) %>
+                        <% } %>
+                    " alt="<%= user.firstname %> Profile">
                     </div>
                 <h3 class="username"> <%= (user.firstName) %> <%= user.lastName %></h3>
             </div>
@@ -62,8 +68,8 @@
                 <div id="chat-avatar-main" class="chat-avatar chat-avatar-main">
                     <img src="https://placehold.co/50x50/3c006b/FFFFFF?text=SS" alt="User Avatar">
                 </div>
-                <span id="chat-name-main" class="chat-name-main">Chatting App</span>
-                <span id="chat-status-main" class="chat-status-main">Online</span>
+                <span id="chat-name-main" class="chat-name-main">Konnekt</span>
+                <span id="chat-status-main" class="chat-status-main"></span>
                 <div class="chat-main-actions">
                     <i class="fas fa-video"></i>
                     <i class="fas fa-phone"></i>
@@ -93,7 +99,13 @@
                 <span>Profile</span>
             </div>
             <div class="user-avatar profile-avatar-large">
-                <img src="/img/<%= user.profilePicUrl %>">
+                <img src="
+                <% if (user.profilePicUrl) { %>
+                         <%= user.profilePicUrl %>
+                        <% } else { %>
+                        https://placehold.co/200x200/3c006b/FFFFFF?text=<%= user.firstName.charAt(0) + user.lastName.charAt(0) %>
+                        <% } %>
+                " alt="<%= user.firstName %>'s Profile">
             </div>
             <div class="user-profile-info user-name">
                 <i class="user-profile-icon fa-solid fa-face-smile"></i>

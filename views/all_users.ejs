@@ -76,7 +76,7 @@
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>
-                                <img src="/img/${user.profilePicUrl || 'https://via.placeholder.com/100'}" alt="Profile Picture" style="width:100px; height:100px; object-fit:cover; border-radius:50%;">
+                                <img src="${user.profilePicUrl || 'https://dummyimage.com/50x50/7F00FF/fff.png&text='+user.firstName[0]+user.lastName[0]}" alt="Profile Picture" style="width:100px; height:100px; object-fit:cover; border-radius:50%;">
                         </td>
                         <td>${user.firstName || ''}</td>
                         <td>${user.lastName || ''}</td>

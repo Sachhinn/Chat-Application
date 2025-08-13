@@ -129,27 +129,25 @@
         font-size: 0.95em;
         display: none;
     }
-
-    /* Media Query for Mobile Phones (screens up to 480px wide) */
     @media (max-width: 480px) {
         body {
-            background: #fff; /* Make the background white on mobile for a cleaner look */
+            background: #fff; 
         }
         .container {
-            max-width: 100%; /* Take up full width */
-            margin: 0; /* Remove side margins */
-            padding: 16px; /* Adjust padding for mobile */
-            box-shadow: none; /* Remove shadow on full-width container */
-            border-radius: 0; /* No border radius on mobile for a seamless feel */
+            max-width: 100%;
+            margin: 0; 
+            padding: 16px;
+            box-shadow: none; 
+            border-radius: 0; 
         }
         h1 {
-            font-size: 2em; /* Slightly smaller for mobile */
+            font-size: 2em;
         }
         h2 {
-            font-size: 1.6em; /* Slightly smaller for mobile */
+            font-size: 1.6em;
         }
         button {
-            padding: 14px; /* A bit more padding for an even better touch target */
+            padding: 14px;
         }
     }
 </style>
@@ -158,9 +156,9 @@
 <body>
     <div class="container">
         <h1>Konnekt</h1>
-        <h2>Register</h2>
+        <h2>Sign-up</h2>
         <div class="error-msg" id="errorMsg"></div>
-        <form id="registerForm" action="/register" method="POST" enctype="multipart/form-data">
+        <form id="registerForm" enctype="multipart/form-data">
             <div class="form-group">
                 <label for="firstname">First Name<span style="color:red">*</span></label>
                 <input type="text" id="firstname" name="firstName" required>
@@ -230,6 +228,7 @@
         const form = document.getElementById('registerForm');
         const errorMsg = document.getElementById('errorMsg');
         form.addEventListener('submit', function (e) {
+            e.preventDefault();
             errorMsg.style.display = 'none';
             let valid = true;
             ['firstname', 'lastname', 'username'].forEach(id => {
@@ -240,12 +239,33 @@
                 }
             });
             if (!valid) {
-                e.preventDefault();
                 errorMsg.textContent = 'Please fill in all required fields.';
                 errorMsg.style.display = 'block';
                 setTimeout(() => {
                     document.querySelectorAll('.shake').forEach(el => el.classList.remove('shake'));
                 }, 400);
+            }
+            else{
+                // If all fields are valid, submit the form
+                const formData = new FormData(e.target);
+                fetch('/register', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = '/users/' + data.message._id; // Redirect to user profile
+                    } else {
+                        errorMsg.textContent = data.message || 'Registration failed. Please try again.';
+                        errorMsg.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    errorMsg.textContent = 'An error occurred. Please try again later.';
+                    errorMsg.style.display = 'block';
+                });
             }
         });
     </script>
