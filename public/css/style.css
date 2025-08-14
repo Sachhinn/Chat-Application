@@ -51,6 +51,7 @@ body {
 /* --- Sidebar --- */
 .sidebar {
     width: 250px;
+    flex-shrink: 0;
     background-color: var(--primary-dark-purple);
     display: flex;
     flex-direction: column;
@@ -824,9 +825,9 @@ body {
         justify-content: space-between;
         align-items: flex-end;
         padding: 5px 10px;
-        line-height: 1.2;
+        line-height: 1.5;
         border-radius: 7px;
-        font-size: .95em;
+        font-size: .85em;
     }
 
     .message-bubble.sent {

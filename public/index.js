@@ -163,42 +163,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     //Event listener for browser back/forward button::::::::::::::
     window.addEventListener('popstate', (event) => {
         if (isMobile) {
+            console.log(event.state)
             toggleChatView(event.state)
         }
     })
-
-    //Event listener for Buttons ::::::::::::::::::
-
-    // let ChatOptionBtns = Array.from(document.getElementsByClassName('chat-item-options-btn'))
-    // ChatOptionBtns.forEach(btn => {
-        // btn.addEventListener('click', event => {
-        //     let anyActiveChatOptions = document.querySelectorAll('.chat-item-options.active')
-        //     if (anyActiveChatOptions.length > 0) {
-        //         for (const each of anyActiveChatOptions) {
-        //             if (btn.nextElementSibling !== each) {
-        //                 each.classList.remove('active')
-        //             }
-        //         }
-        //     }
-        //     let allOptions = btn.nextElementSibling
-        //     optionPanelOpen = allOptions.classList.toggle('active')
-        //     event.stopPropagation();
-        // })
-        // let allOptions = btn.nextElementSibling
-        // allOptions.addEventListener('click', event => {
-        //     if (event.target.dataset.action === 'delete-conversation') {
-        //         if (confirm('Delete all Messages?')) {
-        //             console.log(event.target.dataset.conversationid)
-        //             deleteAllMessages(event.target.dataset.conversationid);
-        //         } else {
-        //             allOptions.classList.remove('active')
-        //             optionPanelOpen = false;
-        //             event.preventDefault();
-        //         }
-        //     }
-        //     event.stopPropagation();
-        // }, false)
-    // })
 })
 window.addEventListener('resize', setAppHeight)
 window.addEventListener('orientationchange', setAppHeight)
@@ -251,10 +219,14 @@ function toggleChatView(state) {
                     e.classList.remove('active')
                 }
             })
+            if (!state) {
+                navElements[0].classList.add('active')
+            }
             chatListPanel.style.display = 'flex' // Default 
             userProfile.style.display = 'none'
             chatMain.style.display = 'none'
             isConversationPanelOpen = true;
+
         }
 }
 function ifNewMessage() {
@@ -324,34 +296,37 @@ function getConversationList(conversations) {
                     getMessages(participant)
                     toggleChatView('chat-main')
                 })
-                let btn = chatitem.lastChild.firstChild
-                btn.addEventListener('click', event => {
-                    let anyActiveChatOptions = document.querySelectorAll('.chat-item-options.active')
-                    if (anyActiveChatOptions.length > 0) {
-                        for (const each of anyActiveChatOptions) {
-                            if (btn.nextElementSibling !== each) {
-                                each.classList.remove('active')
+                if (!isMobile) {
+                    let btn = chatitem.lastChild.firstChild
+                    btn.addEventListener('click', event => {
+                        let anyActiveChatOptions = document.querySelectorAll('.chat-item-options.active')
+                        if (anyActiveChatOptions.length > 0) {
+                            for (const each of anyActiveChatOptions) {
+                                if (btn.nextElementSibling !== each) {
+                                    each.classList.remove('active')
+                                }
                             }
                         }
-                    }
+                        let allOptions = btn.nextElementSibling
+                        optionPanelOpen = allOptions.classList.toggle('active')
+                        event.stopPropagation();
+                    })
                     let allOptions = btn.nextElementSibling
-                    optionPanelOpen = allOptions.classList.toggle('active')
-                    event.stopPropagation();
-                })
-                let allOptions = btn.nextElementSibling
-                allOptions.addEventListener('click', event => {
-                    if (event.target.dataset.action === 'delete-conversation') {
-                        if (confirm('Delete all Messages?')) {
-                            console.log(event.target.dataset.conversationid)
-                            deleteAllMessages(event.target.dataset.conversationid);
-                        } else {
-                            allOptions.classList.remove('active')
-                            optionPanelOpen = false;
-                            event.preventDefault();
+                    allOptions.addEventListener('click', event => {
+                        if (event.target.dataset.action === 'delete-conversation') {
+                            if (confirm('Delete all Messages?')) {
+                                console.log(event.target.dataset.conversationid)
+                                deleteAllMessages(event.target.dataset.conversationid);
+                            } else {
+                                allOptions.classList.remove('active')
+                                optionPanelOpen = false;
+                                event.preventDefault();
+                            }
                         }
-                    }
-                    event.stopPropagation();
-                }, false)
+                        event.stopPropagation();
+                    }, false)
+                }
+
             }
             else {
                 return;
