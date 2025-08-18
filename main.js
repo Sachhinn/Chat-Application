@@ -64,11 +64,7 @@ app.get('/deleteAllMessages/:id', async (req, res) => {
     let conversationId = req.params
     console.log(conversationId)
     let result = await Message.deleteMany({ conversationId: new mongoose.Types.ObjectId(conversationId) })
-    await Conversation.findByIdAndUpdate(new mongoose.Types.ObjectId(conversationId), {
-        lastMessage: null,
-        lastMessageBy: null,
-        lastMessageAt: new Date()
-    })
+    await Conversation.findByIdAndDelete(new mongoose.Types.ObjectId(conversationId))
     res.status(201).json({ success: true, message: { deletedMessages: result.deletedCount } })
 })
 app.get('/all_users', (req, res) => {

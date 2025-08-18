@@ -7,8 +7,8 @@ let isConversationPanelOpen = true;
 let activeChatPages = 1;
 let hasMoreMessage;
 let optionPanelOpen = false;
-let isMobile = window.matchMedia('(max-width:700px)').matches
 setAppHeight();
+let isMobile = window.matchMedia('(max-width:700px)').matches
 document.addEventListener('DOMContentLoaded', async () => {
     getConversationList(conversations)
     //Check for mobile:::::
@@ -39,7 +39,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     let elements = document.querySelectorAll('.nav-item')
     elements.forEach(element => {
         element.addEventListener('click', (event) => {
-
             ///////////////IF clicked Item is Contacts::::::::::::::::::::::::
             if (element.id === "nav-item-contacts") { //If the clicked item is contacts::
                 let allElements = Array.from(element.parentElement.children)//removing and adding active nav-item::
@@ -109,7 +108,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         let checkbox = document.querySelector('#search-checkbox')
         let checkboxLabel = document.querySelector('#search-checkbox-label')
         let inputbox = searchPanel.firstElementChild
-        if (!(searchPanel.contains(event.target)) && !(checkboxLabel.contains(event.target))) {
+        if (!(searchPanel.contains(event.target)) && !(checkboxLabel.contains(event.target)) && !(checkbox.contains(event.target))) {
             checkbox.checked = false;
         }
         if (event.target === inputbox) {
@@ -315,7 +314,6 @@ function getConversationList(conversations) {
                     allOptions.addEventListener('click', event => {
                         if (event.target.dataset.action === 'delete-conversation') {
                             if (confirm('Delete all Messages?')) {
-                                console.log(event.target.dataset.conversationid)
                                 deleteAllMessages(event.target.dataset.conversationid);
                             } else {
                                 allOptions.classList.remove('active')
@@ -587,6 +585,17 @@ async function deleteAllMessages(conversationId) {
     let result = await fetch(`/deleteAllMessages/${conversationId}`).then(response => response.json())
     if (result.success) {
         console.log(result.message)
+        document.getElementById(conversationId).remove()
+        conversations = conversations.filter(convo => convo._id.toString() !== conversationId.toString())
+        if(conversationId === activeChat._id && !isMobile) {
+            const messageArea = document.querySelector('#messages-area')
+            messageArea.innerHTML = '';
+            activeChatUser = null;
+            activeChat = null;
+            document.querySelector('#chat-avatar-main img').src = 'https://dummyimage.com/50x50/3c006b/FFFFFF?text=NA';
+            document.querySelector('#chat-name-main').innerText = '';
+            document.querySelector('#chat-status-main').innerText = '';
+        }
     }
     else { console.error(result.message) }
 }
@@ -667,7 +676,7 @@ async function setIntervalForNewMessages() {
     }, 2000);
 }
 //Profile of other user.
-//Add authentication and authorization
+//Add authentication and authorization (Json Web Tokens)
 //Archives section
 //date bubble in chat-main
 //Set the width of side-navbar so that it doesn't change when changing chats.

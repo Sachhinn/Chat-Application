@@ -43,7 +43,6 @@
         <section class="chat-list-panel">
             <div class="chat-list-header">
                 <h2>Messages</h2>
-                <!-- <label id="search-checkbox-label-1" for="search-checkbox"></label><i class="fas fa-search"></i></label> -->
                 <label id="search-checkbox-label" for="search-checkbox"><i class="fas fa-plus-square"></i></label>
             </div>
             <div class="chat-list-scroll">
@@ -142,8 +141,8 @@
     </div>
     <script>
         const user = <%- JSON.stringify(user) -%>;
-        const contacts = <%- JSON.stringify(contacts) -%>;
-        const conversations = <%- JSON.stringify(conversations) -%>;
+        let contacts = <%- JSON.stringify(contacts) -%>;
+        let conversations = <%- JSON.stringify(conversations) -%>;
     </script>
 <script src="/index.js"></script>
 </body>
