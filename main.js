@@ -18,11 +18,11 @@ import jwt from 'jsonwebtoken'
 const __fileName = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__fileName);
 dotenv.config({ quiet: true });
-let user = User.findOneAndUpdate({username:"sachinsharma2"} , {$set:{passwordHash:'Sachin@123'}})
 connectDB();
 const options = {
     httpOnly: true,
-    secure: true,
+    sameSite:'Lax'
+    // secure: true,
 }
 const app = express()
 app.set('view engine', 'ejs')
@@ -32,7 +32,6 @@ app.use(express.json())
 app.use(express.text())
 app.use(cookieParser());
 const PORT = process.env.PORT || 3000
-
 const generateAccessAndRefreshTokens = async (user) => {
     try {
         const accessToken = await user.generateAccessToken();
@@ -41,7 +40,7 @@ const generateAccessAndRefreshTokens = async (user) => {
         await user.save({ validateBeforeSave: false });
         return { accessToken, refreshToken };
     } catch (error) {
-        return { error: 'Error in generating tokens', message: error.message };
+        return{ error: 'Error in generating tokens', message: error.message };
     }
 }
 
@@ -54,10 +53,9 @@ app.get('/login', (req, res) => {
 app.get('/register', (req, res) => {
     res.render('register')
 })
-app.get('/users/:id', verifyUserToken , async (req, res) => {
+app.get('/user', verifyUserToken , async (req, res) => {
     try {
-        const id = req.params.id;
-        const user = await User.where('_id').equals(id).populate('contacts', 'firstName , lastName , profilePicUrl , bio , status').populate({
+        const user = await User.findById(req.user._id).populate('contacts', 'firstName , lastName , profilePicUrl , bio , status').populate({
             path: "conversations",
             populate: {
                 path: "participants",
@@ -133,7 +131,7 @@ app.post('/login', upload.none(), async (req, res) => {
             if (await user.isPasswordCorrect(password)) {
                 generateAccessAndRefreshTokens(user).then((tokens) => {
                     if (tokens.error) {
-                        return res.status(500).json({ success: false, message: tokens.error });
+                        return res.status(500).json({ success: false, message: tokens.message });
                     }
                     user.set('passwordHash', undefined) // because delete user.passwordHash doesn't properly delete it as its a mongoose object.
                     user.set('refreshToken', undefined)

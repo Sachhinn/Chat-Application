@@ -255,7 +255,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        window.location.href = '/users/' + data.message._id; // Redirect to user profile
+                        window.location.href = '/user' // Redirect to user profile
                     } else {
                         errorMsg.textContent = data.message || 'Registration failed. Please try again.';
                         errorMsg.style.display = 'block';

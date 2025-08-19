@@ -170,7 +170,7 @@
                 .then(data => {
                     if (data.success) {
                         console.log(data.message);
-                        window.location.href = `/users/${data.message._id}`; // Redirect to user profile
+                        window.location.href = `/user`; // Redirect to user profile
                     } else {
                         console.log(data);
                         errorMsg.textContent = data.message || 'Invalid credentials.';
