@@ -675,6 +675,18 @@ async function setIntervalForNewMessages() {
 
     }, 2000);
 }
+//Function to logout user:
+async function logout() {
+    await fetch('/logout',{method:'POST'}).then(response=> response.json())
+    .then(data=>{
+        if(data.success){
+            window.location.href = '/login'
+        }
+        else{
+            console.log(data.message)
+        }
+    })
+}
 //Profile of other user.
 //Add authentication and authorization (Json Web Tokens)
 //Archives section

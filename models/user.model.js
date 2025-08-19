@@ -43,6 +43,7 @@ const userSchema = new mongoose.Schema({
         required: false,
         ref: 'Conversation'
     }],
+    refreshToken:String,
     createdAt: { type: Date, immutable: true, default: () => new Date() },
     updatedAt: { type: Date, default: () => new Date() }
 })

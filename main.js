@@ -5,27 +5,45 @@ import User from './models/user.model.js'
 import Conversation from './models/conversation.model.js'
 import Message from './models/message.model.js';
 import path from 'path';
+import cookieParser from 'cookie-parser';
 import fs from 'fs/promises';
+import bcrypt from 'bcrypt'
 import { fileURLToPath } from 'url';
 import { upload } from './middleware/multer.middleware.js'
-import {v2 as cloudinary} from 'cloudinary'
+import { v2 as cloudinary } from 'cloudinary'
 import { uploadOnCloudinaryWithPublicId } from './utils/cloudinary.js'
 import mongoose from 'mongoose'
+import { verifyUserToken } from './middleware/auth.middleware.js'
+import jwt from 'jsonwebtoken'
 const __fileName = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__fileName);
 dotenv.config({ quiet: true });
+let user = User.findOneAndUpdate({username:"sachinsharma2"} , {$set:{passwordHash:'Sachin@123'}})
 connectDB();
-export const app = express()
-fileURLToPath
+const options = {
+    httpOnly: true,
+    secure: true,
+}
+const app = express()
 app.set('view engine', 'ejs')
 app.use(express.urlencoded({ extended: true }))
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(express.json())
 app.use(express.text())
+app.use(cookieParser());
 const PORT = process.env.PORT || 3000
 
-// let result = await User.deleteOne({_id:'689b8062c7da970ba76fca9e'})
-// console.log(result)
+const generateAccessAndRefreshTokens = async (user) => {
+    try {
+        const accessToken = await user.generateAccessToken();
+        const refreshToken = await user.generateRefreshToken();
+        user.refreshToken = refreshToken;
+        await user.save({ validateBeforeSave: false });
+        return { accessToken, refreshToken };
+    } catch (error) {
+        return { error: 'Error in generating tokens', message: error.message };
+    }
+}
 
 app.get('/', (req, res) => {
     res.redirect('/login')
@@ -36,7 +54,7 @@ app.get('/login', (req, res) => {
 app.get('/register', (req, res) => {
     res.render('register')
 })
-app.get('/users/:id', async (req, res) => {
+app.get('/users/:id', verifyUserToken , async (req, res) => {
     try {
         const id = req.params.id;
         const user = await User.where('_id').equals(id).populate('contacts', 'firstName , lastName , profilePicUrl , bio , status').populate({
@@ -49,14 +67,14 @@ app.get('/users/:id', async (req, res) => {
                 sort: { updatedAt: -1 }
             }
         }).findOne()
-        if(user){
-            res.render('index', { user, contacts: user.contacts?user.contacts:null, conversations: user.conversations?user.conversations:null })
+        if (user) {
+            res.render('index', { user, contacts: user.contacts ? user.contacts : null, conversations: user.conversations ? user.conversations : null })
         }
-        else{
+        else {
             throw new Error('Cannot Find the user')
         }
     } catch (error) {
-        res.status(501).json({success:false,message:error.message})
+        res.status(501).json({ success: false, message: error.message })
     }
 
 })
@@ -75,21 +93,19 @@ app.post('/allUsers', async (req, res) => {
     res.status(200).json(allUsers)
 })
 app.post('/register', upload.single('avatar'), async (req, res) => {
-    //Check why does it throw : "an error occured" when registering
     const { username, password, firstName, lastName, bio } = req.body
     if ([username, password, firstName, lastName].some((field) => field?.trim() === "")) {
         res.status(400).json({ success: false, message: 'Provide All Fields.' })
     }
     let doExist = await User.findOne({ username })
-    if(doExist){
-        res.status(409).json({ success: false, message: 'Username Already Exists!' }) 
+    if (doExist) {
+        res.status(409).json({ success: false, message: 'Username Already Exists!' })
         return;
     }
     let avatar;
     if (req.file) {
-        avatar = await uploadOnCloudinaryWithPublicId(req.file.path , req.file.filename.split('.')[0])
+        avatar = await uploadOnCloudinaryWithPublicId(req.file.path, req.file.filename.split('.')[0])
         if (!avatar) { res.status(501).json({ success: false, message: 'No Profile picture link generated! Try again' }) }
-        console.log(avatar.url)
     }
     let user = await User.create({
         firstName,
@@ -103,22 +119,34 @@ app.post('/register', upload.single('avatar'), async (req, res) => {
     if (!createdUser) {
         res.status(500).json({ success: false, message: 'Could not register, please try again.' })
     }
-    res.status(201).json({success:true,message:createdUser})
+    const {accessToken , refreshToken} = await generateAccessAndRefreshTokens(user)
+    res.status(201)
+    .cookie('accessToken',accessToken , options)
+    .cookie('refreshToken',refreshToken , options)
+    .json({ success: true, message: createdUser })
 })
-app.post('/login', async (req, res) => {
-    console.log('req received')
+app.post('/login', upload.none(), async (req, res) => {
     const { username, password } = req.body;
-    console.log(req.body)
     try {
         let user = await User.findOne({ username: username }).select('+passwordHash')
         if (user) {
-            console.log("User found")
             if (await user.isPasswordCorrect(password)) {
-                delete user.passwordHash;
-                res.status(201).json({ success: true, message: user })
+                generateAccessAndRefreshTokens(user).then((tokens) => {
+                    if (tokens.error) {
+                        return res.status(500).json({ success: false, message: tokens.error });
+                    }
+                    user.set('passwordHash', undefined) // because delete user.passwordHash doesn't properly delete it as its a mongoose object.
+                    user.set('refreshToken', undefined)
+                    res.status(201)
+                        .cookie('accessToken', tokens.accessToken, options)
+                        .cookie('refreshToken', tokens.refreshToken, options)
+                        .json({ success: true, message: user });
+                })
+                    .catch(error => {
+                        console.log(error.message)
+                        res.status(500).json({success:false,message:error.message})
+                    })
             } else {
-                console.log("Password didn't match")
-                console.log(user.passwordHash, password)
                 throw new Error("Password didn't match")
             }
         } else {
@@ -127,6 +155,46 @@ app.post('/login', async (req, res) => {
     } catch (error) {
         console.error(error)
         res.json({ success: false, message: error.message })
+    }
+})
+app.post('/logout', verifyUserToken, async (req, res) => {
+    try {
+        await User.findByIdAndUpdate(req.user._id, {
+            $unset: { refreshToken: 1 } // the $set:{refreshtoken:undefined} operator won't work here as it is designed to ignore the properties set as undefined.
+        })
+        let options = {
+            httpOnly: true,
+            secure: true,
+        }
+        res.status(201)
+            .clearCookie('accessToken', options)
+            .clearCookie('refreshToken', options)
+            .json({ success: true, message: 'User Log Out Successful' })
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Something went wrong' })
+    }
+})
+app.post('/refresh-token', async (req, res) => {
+    try {
+        const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
+        if (!incomingRefreshToken) {
+            return res.status(403).json({ success: false, message: "No Refresh Token Received" });
+        }
+        const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
+        const user = await User.findById(decodedToken?._id)
+        if (!user) {
+            return res.status(403).json({ success: false, message: "Invalid Refresh Tokens" });
+        }
+        if (incomingRefreshToken !== user?.refreshToken) {
+            return res.status(403).json({ success: false, message: "Refresh Token is either expired or used" });
+        }
+        const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user)
+        res.status(200)
+            .cookie('accessToken', accessToken, options)
+            .cookie('refreshToken', refreshToken, options)
+            .json({ success: true, message: 'Refresh Token Refreshed' })
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message })
     }
 })
 app.post('/getMessages', async (req, res) => {
