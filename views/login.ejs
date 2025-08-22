@@ -102,13 +102,17 @@
         }
     </style>
 </head>
-
+<script>
+        if (<%- JSON.stringify(message) -%>) {
+            var queryMessage = <%- JSON.stringify(message) -%>;
+        }
+</script>
 <body>
+
     <div class="login-container">
         <h1>Konnekt</h1>
         <h2>Login</h2>
         <div id="errorMsg" class="error"></div>
-        <!-- Check why doesn't the login form works -->
         <form id="loginForm" autocomplete="off">
             <div class="form-group">
                 <label for="username">Username</label>
@@ -132,6 +136,15 @@
         </div>
     </div>
     <script>
+        if (queryMessage) {
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.style.display = 'block';
+            errorMsg.innerText = queryMessage;
+            setTimeout(() => {
+                errorMsg.style.display = 'none';
+                errorMsg.innerText = null;
+            }, 3000);
+        }
         // Password view toggle
         const passwordViewInput = document.getElementById('passwordView');
         const togglePasswordView = document.getElementById('togglePasswordView');
@@ -155,10 +168,10 @@
             }
             login(username, password);
         });
-    
+
         // Login For DEMO User:
-        document.getElementById('DemoUser').addEventListener('click', ()=>{
-            login('demo_user','demo_password')
+        document.getElementById('DemoUser').addEventListener('click', () => {
+            login('demo_user', 'demo_password')
         })
 
         function login(username, password) {

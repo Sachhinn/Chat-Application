@@ -45,10 +45,17 @@ const generateAccessAndRefreshTokens = async (user) => {
 }
 
 app.get('/', (req, res) => {
-    res.redirect('/login')
+    let message = encodeURIComponent('Please Login First')
+    res.redirect(`/login?message=${message}`)
 })
 app.get('/login', (req, res) => {
-    res.render("login")
+    if(req.query.message){
+        let message = req.query.message
+        res.render("login" , {message})
+    }
+    else{
+        res.render('login' , {message: null})
+    }
 })
 app.get('/register', (req, res) => {
     res.render('register')
@@ -72,7 +79,7 @@ app.get('/user', verifyUserToken , async (req, res) => {
             throw new Error('Cannot Find the user')
         }
     } catch (error) {
-        res.status(501).json({ success: false, message: error.message })
+        res.status(501).json({ success: false, message: error })
     }
 
 })
