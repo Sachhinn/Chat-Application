@@ -32,7 +32,7 @@ app.use(express.json())
 app.use(express.text())
 app.use(cookieParser());
 const PORT = process.env.PORT || 3000
-const generateAccessAndRefreshTokens = async (user) => {
+export const generateAccessAndRefreshTokens = async (user) => {
     try {
         const accessToken = await user.generateAccessToken();
         const refreshToken = await user.generateRefreshToken();

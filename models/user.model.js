@@ -32,6 +32,7 @@ const userSchema = new mongoose.Schema({
     bio:String,
     status: {
         type: String,
+        default:'offline'
     },
     contacts: [{
         type: mongoose.SchemaTypes.ObjectId,
