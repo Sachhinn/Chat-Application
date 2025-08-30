@@ -6,11 +6,8 @@ import Conversation from './models/conversation.model.js'
 import Message from './models/message.model.js';
 import path from 'path';
 import cookieParser from 'cookie-parser';
-import fs from 'fs/promises';
-import bcrypt from 'bcrypt'
 import { fileURLToPath } from 'url';
 import { upload } from './middleware/multer.middleware.js'
-import { v2 as cloudinary } from 'cloudinary'
 import { uploadOnCloudinaryWithPublicId } from './utils/cloudinary.js'
 import mongoose from 'mongoose'
 import { verifyUserToken } from './middleware/auth.middleware.js'
