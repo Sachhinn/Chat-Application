@@ -38,7 +38,6 @@ io.use((socket, next) => {
 })
 io.on('connection',async (socket) => {
     const userId = socket.handshake.auth.userId; // Use this user Id to authenticate the user
-    console.log('Websocket connected Successfully : ', userId)
     socket.join(userId)
     const user = await User.findById(new mongoose.Types.ObjectId(userId))
     user.status = "Online"
@@ -51,7 +50,6 @@ io.on('connection',async (socket) => {
         io.to(receiverId).emit('message', { senderId: userId, message })
     })
     socket.on('disconnect', () => {
-        console.log('User Disconnected', userId)
         user.status = "Offline"
         user.save();
     })
@@ -121,7 +119,6 @@ app.get('/user', verifyUserToken, async (req, res) => {
 })
 app.get('/deleteAllMessages/:id', async (req, res) => {
     let conversationId = req.params
-    console.log(conversationId)
     let result = await Message.deleteMany({ conversationId: new mongoose.Types.ObjectId(conversationId) })
     await Conversation.findByIdAndDelete(new mongoose.Types.ObjectId(conversationId))
     res.status(201).json({ success: true, message: { deletedMessages: result.deletedCount } })
@@ -184,7 +181,6 @@ app.post('/login', upload.none(), async (req, res) => {
                         .json({ success: true, message: user });
                 })
                     .catch(error => {
-                        console.log(error.message)
                         res.status(500).json({ success: false, message: error.message })
                     })
             } else {
@@ -277,15 +273,12 @@ app.post('/getUserByUsername', async (req, res) => {
 })
 app.post('/addToContacts', async (req, res) => {
     const { userId, connectionUserId } = req.body;
-    console.log("User Connection request::")
     const user = await User.findByIdAndUpdate(userId, { $addToSet: { contacts: connectionUserId } })
     res.json({ success: true, message: "Contacts Updated!" })
 })
 app.post('/removeFromContacts', async (req, res) => {
     const { userId, connectionUserId } = req.body;
-    console.log("User Disconnection request::")
     const user = await User.findByIdAndUpdate(userId, { $pull: { contacts: connectionUserId } })
-    console.log(user)
     res.status(201).json({ success: true, message: 'Disconnected' })
 })
 app.post('/ifNewMessage', async (req, res) => {

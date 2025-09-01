@@ -12,10 +12,9 @@ setAppHeight();
 
 const Socket = io({ auth: { userId: user._id } })
 Socket.on('connect', (socket) => {
-    console.log('Websocket connected successfully')
 })
 Socket.on('disconnect', () => {
-    alert('Websocket Disconnected')
+
 })
 
 let isMobile = window.matchMedia('(max-width:700px)').matches
@@ -172,7 +171,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     //Event listener for browser back/forward button::::::::::::::
     window.addEventListener('popstate', (event) => {
         if (isMobile) {
-            console.log(event.state)
             toggleChatView(event.state)
         }
     })
@@ -594,8 +592,7 @@ async function getMessages(participant, pageN = 1) {
 
 async function sendMessage(conversation, participant) {
     const lastMessage = document.getElementsByClassName('message-date-box')
-    console.log(lastMessage[lastMessage.length-1].firstChild.innerText)
-    if(!(lastMessage[lastMessage.length-1].firstChild.innerText === 'Today')){
+    if(!(lastMessage[lastMessage.length-1]?.firstChild.innerText === 'Today')){
         createDateBoxInChat('Today',false)
     }
     let messagebubble;
@@ -636,7 +633,6 @@ async function sendMessage(conversation, participant) {
 async function deleteAllMessages(conversationId) {
     let result = await fetch(`/deleteAllMessages/${conversationId}`).then(response => response.json())
     if (result.success) {
-        console.log(result.message)
         document.getElementById(conversationId).remove()
         conversations = conversations.filter(convo => convo._id.toString() !== conversationId.toString())
         if (conversationId === activeChat._id && !isMobile) {
