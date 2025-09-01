@@ -1,3 +1,4 @@
+
 let activeChatUser;
 let activeChat;
 let setTimerId;
@@ -8,6 +9,15 @@ let activeChatPages = 1;
 let hasMoreMessage;
 let optionPanelOpen = false;
 setAppHeight();
+
+const Socket = io('http://127.0.0.1:3000', { auth: { userId: user._id } })
+Socket.on('connect', (socket) => {
+    console.log('Websocket connected successfully')
+})
+Socket.on('disconnect', () => {
+    alert('Websocket Disconnected')
+})
+
 let isMobile = window.matchMedia('(max-width:700px)').matches
 document.addEventListener('DOMContentLoaded', async () => {
     getConversationList(conversations)
@@ -228,40 +238,49 @@ function toggleChatView(state) {
 
         }
 }
-function ifNewMessage() {
-    if (setTimerId) {
-        clearInterval(setTimerId);
-        console.warn('Removing the existing setInterval..')
+// function ifNewMessage() {
+//     if (setTimerId) {
+//         clearInterval(setTimerId);
+//         console.warn('Removing the existing setInterval..')
+//     }
+//     setTimerId = setInterval(() => {
+//         fetch(`/ifNewMessage`, {
+//             method: "POST",
+//             headers: { 'content-type': "application/json" },
+//             body: JSON.stringify({
+//                 userId: user._id,
+//                 activeUserId: activeChatUser._id,
+//                 lastMessage: activeChatUser.Messages[activeChatUser.Messages.length - 1]
+//             })
+//         }).then(response => {
+//             return response.json()
+//         }).then(data => {
+//             if (data.success) {
+//                 let newMessages = data.message
+//                 newMessages.forEach(msg => {
+//                     activeChatUser.Messages.push(msg) /// Very risky as forEach is not synchronus so, it might lead to problems where the last message of active chatuser is being checked
+//                     if (isConversationPanelOpen) {
+//                         gettingRecentChatAtTop(msg.context, msg.updatedAt, activeChat._id)
+//                     }
+//                     if (msg.sender !== user._id) {
+//                         let bubble = createMsgBubble(msg, true)
+//                         bubble.scrollIntoView({ behavior: 'smooth' })
+//                     }
+//                 })
+//             }
+//         })
+//     }, 10000);
+// }
+Socket.on('message', (data) => {
+    data = data.msg;
+    if (isConversationPanelOpen) {
+        gettingRecentChatAtTop(data.context, data.updatedAt, data.conversationId)
     }
-    setTimerId = setInterval(() => {
-        fetch(`/ifNewMessage`, {
-            method: "POST",
-            headers: { 'content-type': "application/json" },
-            body: JSON.stringify({
-                userId: user._id,
-                activeUserId: activeChatUser._id,
-                lastMessage: activeChatUser.Messages[activeChatUser.Messages.length - 1]
-            })
-        }).then(response => {
-            return response.json()
-        }).then(data => {
-            if (data.success) {
-                let newMessages = data.message
-                newMessages.forEach(msg => {
-                    activeChatUser.Messages.push(msg) /// Very risky as forEach is not synchronus so, it might lead to problems where the last message of active chatuser is being checked
-                    if (isConversationPanelOpen) {
-                        gettingRecentChatAtTop(msg.context, msg.updatedAt, activeChat._id)
-                    }
-
-                    if (msg.sender !== user._id) {
-                        let bubble = createMsgBubble(msg, true)
-                        bubble.scrollIntoView({ behavior: 'smooth' })
-                    }
-                })
-            }
-        })
-    }, 1500);
-}
+    if (data.sender === activeChatUser?._id) {
+        let bubble = createMsgBubble(data, true)
+        bubble.scrollIntoView({ behavior: 'smooth' })
+    }
+})
 function gettingRecentChatAtTop(context, time, conversationId) {
     let chatText = document.getElementById(conversationId).querySelector(".message-text")
     let chatTime = document.getElementById(conversationId).querySelector('.chat-time')
@@ -331,7 +350,7 @@ function getConversationList(conversations) {
             }
         })
     });
-    setIntervalForNewMessages();
+    // setIntervalForNewMessages();
 }
 function chatList(participant, conversation) {
     //Creating Tags::
@@ -394,30 +413,34 @@ function chatList(participant, conversation) {
 
     return chatitem
 }
-function getTime(pastdate) {
-    let mydate = new Date()
+function getTime(pastdate, forBox = false) {
+    let currentDate = new Date()
     pastdate = new Date(pastdate)
     let construct = "NoDate"
     // if in past year::
-    if (pastdate.getFullYear() !== mydate.getFullYear()) {
+    if (pastdate.getFullYear() !== currentDate.getFullYear()) {
         construct = pastdate.toLocaleDateString('default', { day: "numeric", month: "short", year: "numeric" })
     }
     //if older than a week::
-    if (pastdate.getTime() < (mydate.getTime() - (24 * 60 * 60 * 1000 * 7)) &&
-        pastdate.getFullYear() === mydate.getFullYear()) {
+    if (pastdate.getTime() < (currentDate.getTime() - (24 * 60 * 60 * 1000 * 7)) &&
+        pastdate.getFullYear() === currentDate.getFullYear()) {
         construct = pastdate.toLocaleDateString('default', { day: "2-digit", month: "short" })
     }
     // if within 7 days::
-    if (pastdate.getTime() > mydate.getTime() - (24 * 60 * 60 * 1000 * 7) &&
-        pastdate.getTime() < mydate.getTime() - (24 * 60 * 60 * 1000 * 1)) {
+    if (pastdate.getTime() > currentDate.getTime() - (24 * 60 * 60 * 1000 * 7) &&
+        pastdate.getTime() < currentDate.getTime() - (24 * 60 * 60 * 1000 * 1)) {
         construct = pastdate.toLocaleString('default', { weekday: "short" })
     }
     // if wihtin 24 hours::
-    if (pastdate.getTime() > mydate.getTime() - (24 * 60 * 60 * 1000) &&
-        pastdate.getTime() < mydate.getTime()) {
+    if (pastdate.getTime() > currentDate.getTime() - (24 * 60 * 60 * 1000) &&
+        pastdate.getTime() < currentDate.getTime()) {
         //if today or yesterday::
-        if (pastdate.getDate() === mydate.getDate()) {
-            construct = pastdate.toLocaleString('default', { hour: 'numeric', minute: '2-digit' })
+        if (pastdate.getDate() === currentDate.getDate()) {
+            if (forBox) {
+                construct = "Today"
+            } else {
+                construct = pastdate.toLocaleString('default', { hour: 'numeric', minute: '2-digit' })
+            }
         }
         else {
             construct = "Yesterday"
@@ -496,6 +519,18 @@ function contactsList(contact) {
 
     return chatitem
 }
+function createDateBoxInChat(time , prepend = true) {
+    let msgDateBox = document.createElement('div')
+    msgDateBox.classList.add('message-date-box')
+
+    let span = document.createElement('span')
+    span.innerText = time
+
+    msgDateBox.append(span)
+
+    const messageArea = document.querySelector('#messages-area')
+    prepend?messageArea.prepend(msgDateBox):messageArea.append(msgDateBox)
+}
 //Function to get the past messages:::
 async function getMessages(participant, pageN = 1) {
     clearInterval(setTimerId)
@@ -520,31 +555,49 @@ async function getMessages(participant, pageN = 1) {
         const messageArea = document.querySelector('#messages-area')
 
         let loadedMessage = messages.message;
-
         if (pageN === 1) {
             messageArea.innerHTML = '';
             activeChatUser.Messages = [loadedMessage[0]]
+        } else {
+            messageArea.firstChild.remove()
         }
-        else {
-
+        let groupsofmsg = {};
+        for (const msg of loadedMessage) {
+            potentialGroup = getTime(msg.updatedAt , true)
+            if (!groupsofmsg[potentialGroup]) {
+                groupsofmsg[potentialGroup] = []
+            }
+            groupsofmsg[potentialGroup].push(msg)
         }
-        loadedMessage.forEach((msg) => {
-            messagebubble = createMsgBubble(msg)
-        });
+        for (const group in groupsofmsg) {
+            if (Object.prototype.hasOwnProperty.call(groupsofmsg, group)) {
+                const groupMessage = groupsofmsg[group];
+                groupMessage.forEach(each => {
+                    createMsgBubble(each)
+                });
+                createDateBoxInChat(group)
+            }
+        }
         if (pageN == 1) {
             messageArea.scrollTop = messageArea.scrollHeight;
         }
         if (loadedMessage.length) {
-            ifNewMessage()
             hasMoreMessage = loadedMessage.length === 20;
         }
         else {
             hasMoreMessage = false;
         }
+
     }
 }
 //Function to send Message ::::
+
 async function sendMessage(conversation, participant) {
+    const lastMessage = document.getElementsByClassName('message-date-box')
+    console.log(lastMessage[lastMessage.length-1].firstChild.innerText)
+    if(!(lastMessage[lastMessage.length-1].firstChild.innerText === 'Today')){
+        createDateBoxInChat('Today',false)
+    }
     let messagebubble;
     let text = document.querySelector('#message-input')
     let context = text.value.trim();
@@ -560,7 +613,6 @@ async function sendMessage(conversation, participant) {
     text.value = '';
     if (messagebubble) {
         messagebubble.scrollIntoView({ behavior: 'smooth' })
-
     }
     //Sending message to the backend for DB:::
     let result = await fetch('/saveMessage', {
@@ -569,6 +621,7 @@ async function sendMessage(conversation, participant) {
         body: JSON.stringify({
             sender: user._id,
             receiver: participant._id,
+            conversationId: conversation._id,
             context: context,
             updatedAt: time
         })
@@ -578,7 +631,6 @@ async function sendMessage(conversation, participant) {
             gettingRecentChatAtTop(context, time, conversation._id)
         }
     }
-
 }
 //Function to delete all messages:::
 async function deleteAllMessages(conversationId) {
@@ -587,7 +639,7 @@ async function deleteAllMessages(conversationId) {
         console.log(result.message)
         document.getElementById(conversationId).remove()
         conversations = conversations.filter(convo => convo._id.toString() !== conversationId.toString())
-        if(conversationId === activeChat._id && !isMobile) {
+        if (conversationId === activeChat._id && !isMobile) {
             const messageArea = document.querySelector('#messages-area')
             messageArea.innerHTML = '';
             activeChatUser = null;
@@ -642,50 +694,49 @@ async function getUserbyUsername(username) {
     }
 }
 //Function to check for new messages from user other than the active user
-async function setIntervalForNewMessages() {
-    if (conversationIntervalId) {
-        clearInterval(conversationIntervalId)
+// async function setIntervalForNewMessages() {
+//     if (conversationIntervalId) {
+//         clearInterval(conversationIntervalId)
+//     }
+//     conversationIntervalId = setInterval(async () => {
+//         let result = await fetch('/ifnewConversationMessage',
+//             {
+//                 method: 'POST',
+//                 headers: { 'content-type': 'application/json' },
+//                 body: JSON.stringify(conversations)
+//             }
+//         ).then(response => response.json())
+//         if (result.success) {
+//             let list = result.message;
+//             list.forEach(convo => {
+//                 let messageText = document.getElementById(convo._id).querySelector('.message-text')
+//                 messageText.innerText = convo.lastMessage;
+//                 let chatTime = document.getElementById(convo._id).querySelector('.chat-time')
+//                 chatTime.innerText = getTime(convo.lastMessageAt)
 
-    }
-    conversationIntervalId = setInterval(async () => {
-        let result = await fetch('/ifnewConversationMessage',
-            {
-                method: 'POST',
-                headers: { 'content-type': 'application/json' },
-                body: JSON.stringify(conversations)
-            }
-        ).then(response => response.json())
-        if (result.success) {
-            let list = result.message;
-            list.forEach(convo => {
-                let messageText = document.getElementById(convo._id).querySelector('.message-text')
-                messageText.innerText = convo.lastMessage;
-                let chatTime = document.getElementById(convo._id).querySelector('.chat-time')
-                chatTime.innerText = getTime(convo.lastMessageAt)
+//                 let storedConvo = conversations.find(pastC => pastC._id.toString() === convo._id.toString())
+//                 storedConvo.lastMessage = convo.lastMessage
+//                 storedConvo.lastMessageAt = convo.lastMessageAt
+//                 gettingRecentChatAtTop(convo.lastMessage, convo.lastMessageAt, convo._id)
+//             })
+//         }
+//         if (result.status === 500) {
+//             console.error("Internal Server Error Fetching New Messages")
+//         }
 
-                let storedConvo = conversations.find(pastC => pastC._id.toString() === convo._id.toString())
-                storedConvo.lastMessage = convo.lastMessage
-                storedConvo.lastMessageAt = convo.lastMessageAt
-                gettingRecentChatAtTop(convo.lastMessage, convo.lastMessageAt, convo._id)
-            })
-        }
-        if (result.status === 500) {
-            console.error("Internal Server Error Fetching New Messages")
-        }
-
-    }, 2000);
-}
+//     }, 2000);
+// }
 //Function to logout user:
 async function logout() {
-    await fetch('/logout',{method:'POST'}).then(response=> response.json())
-    .then(data=>{
-        if(data.success){
-            window.location.href = '/login'
-        }
-        else{
-            console.log(data.message)
-        }
-    })
+    await fetch('/logout', { method: 'POST' }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/login'
+            }
+            else {
+                console.log(data.message)
+            }
+        })
 }
 //Profile of other user.
 //Add authentication and authorization (Json Web Tokens)

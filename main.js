@@ -6,11 +6,16 @@ import Conversation from './models/conversation.model.js'
 import Message from './models/message.model.js';
 import path from 'path';
 import cookieParser from 'cookie-parser';
+import fs from 'fs/promises';
+import bcrypt from 'bcrypt'
+import http from 'http'
+import { Server } from 'socket.io'
 import { fileURLToPath } from 'url';
 import { upload } from './middleware/multer.middleware.js'
+import { v2 as cloudinary } from 'cloudinary'
 import { uploadOnCloudinaryWithPublicId } from './utils/cloudinary.js'
-import mongoose from 'mongoose'
-import { verifyUserToken } from './middleware/auth.middleware.js'
+import mongoose, { ObjectId } from 'mongoose'
+import { verifyUserToken, verifyUserTokenWebSocket } from './middleware/auth.middleware.js'
 import jwt from 'jsonwebtoken'
 const __fileName = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__fileName);
@@ -18,10 +23,39 @@ dotenv.config({ quiet: true });
 connectDB();
 const options = {
     httpOnly: true,
-    sameSite:'Lax'
+    sameSite: 'Lax'
     // secure: true,
 }
 const app = express()
+const server = http.createServer(app)
+const io = new Server(server, {
+    cors: {
+        origin: 'http://127.0.0.1:3000'
+    }
+})
+io.use((socket, next) => {
+    verifyUserTokenWebSocket(socket, next)
+})
+io.on('connection',async (socket) => {
+    const userId = socket.handshake.auth.userId; // Use this user Id to authenticate the user
+    console.log('Websocket connected Successfully : ', userId)
+    socket.join(userId)
+    const user = await User.findById(new mongoose.Types.ObjectId(userId))
+    user.status = "Online"
+    user.save();
+    socket.to(userId).emit('Status', 'Sending Status')
+    socket.on('message', context => {
+        console
+        const { receiverId, message } = context;
+
+        io.to(receiverId).emit('message', { senderId: userId, message })
+    })
+    socket.on('disconnect', () => {
+        console.log('User Disconnected', userId)
+        user.status = "Offline"
+        user.save();
+    })
+})
 app.set('view engine', 'ejs')
 app.use(express.urlencoded({ extended: true }))
 app.use(express.static(path.join(__dirname, 'public')))
@@ -37,7 +71,7 @@ export const generateAccessAndRefreshTokens = async (user) => {
         await user.save({ validateBeforeSave: false });
         return { accessToken, refreshToken };
     } catch (error) {
-        return{ error: 'Error in generating tokens', message: error.message };
+        return { error: 'Error in generating tokens', message: error.message };
     }
 }
 
@@ -46,18 +80,18 @@ app.get('/', (req, res) => {
     res.redirect(`/login?message=${message}`)
 })
 app.get('/login', (req, res) => {
-    if(req.query.message){
+    if (req.query.message) {
         let message = req.query.message
-        res.render("login" , {message})
+        res.render("login", { message })
     }
-    else{
-        res.render('login' , {message: null})
+    else {
+        res.render('login', { message: null })
     }
 })
 app.get('/register', (req, res) => {
     res.render('register')
 })
-app.get('/user', verifyUserToken , async (req, res) => {
+app.get('/user', verifyUserToken, async (req, res) => {
     try {
         const user = await User.findById(req.user._id).populate('contacts', 'firstName , lastName , profilePicUrl , bio , status').populate({
             path: "conversations",
@@ -70,7 +104,12 @@ app.get('/user', verifyUserToken , async (req, res) => {
             }
         }).findOne()
         if (user) {
-            res.render('index', { user, contacts: user.contacts ? user.contacts : null, conversations: user.conversations ? user.conversations : null })
+            res.render('index', {
+                user,
+                contacts: user.contacts ? user.contacts : null,
+                conversations: user.conversations ? user.conversations : null,
+                accessToken: req.cookies?.accessToken || req.header('Authorization')?.replace('Bearer ', '')
+            })
         }
         else {
             throw new Error('Cannot Find the user')
@@ -121,11 +160,11 @@ app.post('/register', upload.single('avatar'), async (req, res) => {
     if (!createdUser) {
         res.status(500).json({ success: false, message: 'Could not register, please try again.' })
     }
-    const {accessToken , refreshToken} = await generateAccessAndRefreshTokens(user)
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user)
     res.status(201)
-    .cookie('accessToken',accessToken , options)
-    .cookie('refreshToken',refreshToken , options)
-    .json({ success: true, message: createdUser })
+        .cookie('accessToken', accessToken, options)
+        .cookie('refreshToken', refreshToken, options)
+        .json({ success: true, message: createdUser })
 })
 app.post('/login', upload.none(), async (req, res) => {
     const { username, password } = req.body;
@@ -146,7 +185,7 @@ app.post('/login', upload.none(), async (req, res) => {
                 })
                     .catch(error => {
                         console.log(error.message)
-                        res.status(500).json({success:false,message:error.message})
+                        res.status(500).json({ success: false, message: error.message })
                     })
             } else {
                 throw new Error("Password didn't match")
@@ -204,8 +243,6 @@ app.post('/getMessages', async (req, res) => {
     try {
         const conversationId = await Conversation.startConversation(user, participant)
         let messages = await Message.getOnePageMessages(conversationId, pageN)
-        // let messages = await Message.find({conversationId:conversationId})
-        // messages = messages.reverse()
         res.status(201).json({ success: true, message: messages })
     } catch (error) {
         console.log(error)
@@ -215,6 +252,7 @@ app.post('/getMessages', async (req, res) => {
 app.post('/saveMessage', async (req, res) => {
     try {
         const msg = req.body;
+        io.to(msg.receiver).emit('message', { msg })
         let result = await Message.sendOneToOneMessage(msg.sender, msg.receiver, msg.context)
         res.status(201).json({ success: true, message: 'Message stored successfully' })
     } catch (error) {
@@ -288,6 +326,6 @@ app.post('/ifnewConversationMessage', async (req, res) => {
     }
 
 })
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server started at port : ${PORT}`)
 })

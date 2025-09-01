@@ -377,13 +377,15 @@ body {
 .unread-count:empty {
     display: none;
 }
-.chat-item-options.active{
-    display:flex;
+
+.chat-item-options.active {
+    display: flex;
 }
-.chat-item-options{
+
+.chat-item-options {
     position: absolute;
     top: 50px;
-    background-color:var(--bubble-sent-bg);
+    background-color: var(--bubble-sent-bg);
     width: max-content;
     display: none;
     z-index: 10;
@@ -393,14 +395,17 @@ body {
     padding: 10px;
     right: 0;
 }
-.chat-item-option{
+
+.chat-item-option {
     cursor: pointer;
     padding: 10px;
 }
-.chat-item-options-btn{
-    padding:5px 10px;
+
+.chat-item-options-btn {
+    padding: 5px 10px;
     cursor: pointer;
 }
+
 /* --- Main Chat Area --- */
 .chat-main {
     flex-grow: 1;
@@ -533,6 +538,24 @@ body {
     left: auto;
 }
 
+.message-date-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 18px 0;
+}
+
+.message-date-box span {
+    background: var(--accent-purple);
+    color: white;
+    padding: 4px 16px;
+    border-radius: 16px;
+    font-size: 0.95em;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
 /* --- Chat Input Area --- */
 .chat-input-area {
     background-color: var(--background-subtle);
@@ -605,22 +628,25 @@ body {
     transition: transform 200ms ease-in-out;
     transform-origin: right;
 }
-.user-profile>*{
+
+.user-profile>* {
     opacity: 0;
-    transition: opacity 100ms ease-in-out ;
+    transition: opacity 100ms ease-in-out;
 }
 
 .user-profile.active {
     transform: scaleX(1);
     transition: transform 200ms ease-in-out;
 }
-.user-profile.active>*{
+
+.user-profile.active>* {
     opacity: 1;
     transition: opacity 100ms ease-in-out;
     transition-delay: 100ms;
 }
 
-.user-profile .back-button , .user-profile .close-button {
+.user-profile .back-button,
+.user-profile .close-button {
     background-color: transparent;
     color: #F0F2F5;
     font-size: inherit;
@@ -633,7 +659,8 @@ body {
     font-size: 1.5em;
     display: inline-flex;
     gap: 10px;
-    & .back-button{
+
+    & .back-button {
         display: none;
     }
 }
@@ -662,18 +689,20 @@ body {
     font-size: 1.5em;
 }
 
-.logout-button-container{
+.logout-button-container {
     text-align: center;
     margin-top: 1em;
 }
-.logout-button{
-    border:none;
+
+.logout-button {
+    border: none;
     outline: none;
     font-size: 1.5em;
     padding: 10px 20px;
     color: #7F00FF;
-    background:#F0F2F5;
+    background: #F0F2F5;
 }
+
 /* --- Responsive Adjustments --- */
 @media (max-width: 900px) {
     .sidebar {
@@ -689,11 +718,13 @@ body {
         width: 70px;
         height: 70px;
     }
-    .user-avatar{
+
+    .user-avatar {
         width: 200px;
         min-height: 120px;
         height: 200px;
     }
+
     .username {
         display: none;
     }
@@ -858,25 +889,30 @@ body {
             margin-right: 5px;
         }
     }
-    .user-profile{
-        position:static;
+
+    .user-profile {
+        position: static;
         height: calc(var(--app-height) - 50px);
         width: 100%;
         transform: scaleX(1);
-        transition:none;
+        transition: none;
         display: none;
     }
-    .user-profile>*{
+
+    .user-profile>* {
         opacity: 1;
         transition: none;
     }
-    .user-profile-header .close-button{
+
+    .user-profile-header .close-button {
         display: none;
     }
-    .user-profile-header .back-button{
+
+    .user-profile-header .back-button {
         display: block;
     }
-    .user-profile .user-avatar{
+
+    .user-profile .user-avatar {
         width: 40vw;
         min-height: 120px;
         height: 40vw;

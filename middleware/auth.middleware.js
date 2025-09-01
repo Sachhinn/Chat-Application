@@ -20,7 +20,7 @@ export const verifyUserToken = async (req, res, next) => { // res can be put as 
         next();
     } catch (error) {
         if (error.name === 'TokenExpiredError') {
-            console.log('Token Expired at : ',error.expiredAt.toLocaleTimeString())
+            console.log('Token Expired at : ', error.expiredAt.toLocaleTimeString())
             try {
                 const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
                 if (!incomingRefreshToken) {
@@ -51,5 +51,30 @@ export const verifyUserToken = async (req, res, next) => { // res can be put as 
         } else {
             res.status(401).json({ success: false, message: error.message || 'Something went wrong in Authenticating Access Token' })
         }
+    }
+}
+export const verifyUserTokenWebSocket = async (socket, next) => {
+    let cookies = socket.handshake.headers.cookie.split("; ")
+    let accessToken = '';
+    for (let i = 0; i < cookies.length; i++) {
+        if (cookies[i].startsWith('accessToken')) {
+            accessToken = cookies[i].replace('accessToken=', '')
+            break;
+        }
+    }
+    try {
+        if (!accessToken) {
+            console.log('no token received')
+            socket.verify = false;
+            return;
+        }
+        let decodedToken = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET)
+        if (decodedToken) {
+            socket.verify = true;
+            next();
+        }
+    } catch (error) {
+        socket.verify = false;
+        console.log('catch error',error)
     }
 }
