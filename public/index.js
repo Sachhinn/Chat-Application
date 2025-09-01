@@ -10,7 +10,7 @@ let hasMoreMessage;
 let optionPanelOpen = false;
 setAppHeight();
 
-const Socket = io('http://127.0.0.1:3000', { auth: { userId: user._id } })
+const Socket = io({ auth: { userId: user._id } })
 Socket.on('connect', (socket) => {
     console.log('Websocket connected successfully')
 })
